@@ -20,6 +20,19 @@ install -m644 packaging/linux/io.github.Anchoder.Aireluma.desktop "$stage/usr/sh
 install -m644 LICENSE "$stage/usr/share/doc/aireluma/copyright"
 install -m644 NOTICE "$stage/usr/share/doc/aireluma/NOTICE"
 install -m644 engine/uxplay/LICENSE "$stage/usr/share/doc/aireluma/UxPlay-LICENSE"
+python3 - "$stage/usr/share/doc/aireluma/rust-licenses" <<'PYCODE'
+from pathlib import Path
+import json, shutil, subprocess, sys
+output=Path(sys.argv[1])
+metadata=json.loads(subprocess.check_output(['cargo','metadata','--locked','--format-version=1'],text=True))
+for package in metadata['packages']:
+    folder=Path(package['manifest_path']).parent
+    for source in folder.iterdir():
+        if source.is_file() and (source.name.upper().startswith('LICENSE') or source.name=='COPYING'):
+            target=output/(package['name']+'-'+package['version'])
+            target.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(source,target/source.name)
+PYCODE
 mkdir -p artifacts/shlibs/debian
 printf 'Source: aireluma\nSection: video\nPriority: optional\nMaintainer: Aireluma contributors\nStandards-Version: 4.6.2\n\nPackage: aireluma\nArchitecture: any\nDescription: AirPlay screen and audio receiver\n' > artifacts/shlibs/debian/control
 project_root="$PWD"
