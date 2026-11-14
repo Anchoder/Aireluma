@@ -28,7 +28,7 @@ Resolution, codec and frame rate are negotiated by the iPhone and depend on your
 
 ## Two themes. One compact interface.
 
-<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/images/themes.png"><img src="docs/images/theme-transition.gif" alt="Cursor click demonstrating the light and dark theme switch" width="480"></picture></div>
+<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/images/themes.png"><img src="docs/images/theme-switch-click.gif" alt="Cursor click demonstrating the light and dark theme switch" width="480"></picture></div>
 
 <details><summary>See both themes side by side</summary><img src="docs/images/themes.png" alt="Light and dark interface previews" width="100%"></details>
 

@@ -144,7 +144,7 @@ indices=[0,checkpoints['press-light'],checkpoints['dark'],checkpoints['press-dar
 for i,index in enumerate(indices):samples.paste(frames[index],(i*frames[0].width,0))
 palette=samples.quantize(colors=256)
 encoded=[image.quantize(palette=palette,dither=Image.Dither.NONE) for image in frames]
-encoded[0].save(output/'theme-transition.gif',save_all=True,append_images=encoded[1:],duration=durations,loop=0,optimize=True,disposal=2)
+encoded[0].save(output/'theme-switch-click.gif',save_all=True,append_images=encoded[1:],duration=durations,loop=0,optimize=True,disposal=2)
 
 still=Image.new('RGBA',(800*scale,588*scale),'#eeedf4')
 for x,amount in [(16,0),(408,1)]:still.alpha_composite(window(amount,bool(amount)),(x*scale,16*scale))

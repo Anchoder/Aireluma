@@ -71,4 +71,4 @@ save_gif(frames, [70] * len(frames), output / 'banner.gif')
 import subprocess
 import sys
 subprocess.run([sys.executable, str(root / 'scripts/render-theme-demo.py')], check=True)
-print('Rendered banner.png, banner.gif and theme-transition.gif')
+print('Rendered banner.png, banner.gif and theme-switch-click.gif')
