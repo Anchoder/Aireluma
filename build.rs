@@ -1,5 +1,8 @@
 use std::{env, path::PathBuf, process::Command};
 fn main() {
+    if !env::var("TARGET").unwrap_or_default().contains("windows") {
+        return;
+    }
     println!("cargo:rerun-if-changed=assets/app.rc");
     println!("cargo:rerun-if-changed=assets/aireluma.ico");
     println!("cargo:rerun-if-changed=assets/footer-screen.ico");

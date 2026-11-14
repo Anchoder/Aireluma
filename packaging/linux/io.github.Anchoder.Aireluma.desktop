@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Aireluma
+Comment=Mirror iPhone screen and audio over AirPlay
+Comment[ru]=Повтор экрана и звука iPhone по AirPlay
+Exec=aireluma
+Icon=io.github.Anchoder.Aireluma
+Terminal=false
+Categories=AudioVideo;Network;
+StartupWMClass=io.github.Anchoder.Aireluma

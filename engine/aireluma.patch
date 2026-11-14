@@ -42,7 +42,7 @@ index 97a1ba6..94e151b 100644
      return addr;
  }
 diff --git a/uxplay.cpp b/uxplay.cpp
-index 5ad4e39..be17363 100644
+index 5ad4e39..9dbbe75 100644
 --- a/uxplay.cpp
 +++ b/uxplay.cpp
 @@ -43,6 +43,7 @@
@@ -93,3 +93,12 @@ index 5ad4e39..be17363 100644
  #endif
      std::vector<char> server_hw_addr;
      std::string config_file = "";
+@@ -3765,6 +3766,8 @@ int main (int argc, char *argv[]) {
+         stop_dnssd();
+         cleanup();
+     }
++    printf("AIRELUMA_RECEIVER_READY\n");
++    fflush(stdout);
+     reconnect:
+     compression_type = 0;
+     close_window = new_window_closing_behavior;
