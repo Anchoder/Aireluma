@@ -1,5 +1,5 @@
 <div align="center">
-  <picture><source media="(prefers-reduced-motion: reduce)" srcset="images/banner.png"><img src="images/banner.gif" alt="Aireluma — экран iPhone на Windows и Linux" width="100%"></picture>
+  <picture><source media="(prefers-reduced-motion: reduce)" srcset="images/banner-readable.png"><img src="images/banner-readable.gif" alt="Aireluma — экран iPhone на Windows и Linux" width="100%"></picture>
   <p><strong>Экран и звук iPhone на компьютере. Без проводов.</strong></p>
   <p><a href="https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma-Setup.exe">Windows</a> · <a href="https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma_0.8.1_amd64.deb">Linux .deb</a> · <a href="../README.md">English</a> · <a href="https://github.com/Anchoder/Aireluma/issues">Сообщить о проблеме</a></p>
 </div>

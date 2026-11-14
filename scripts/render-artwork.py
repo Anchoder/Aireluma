@@ -35,10 +35,15 @@ base = Image.new('RGB', (1280 * scale, 360 * scale), '#101014')
 draw = ImageDraw.Draw(base)
 base.paste(logo.resize((76 * scale, 76 * scale), Image.Resampling.LANCZOS), (64 * scale, 72 * scale), logo.resize((76 * scale, 76 * scale), Image.Resampling.LANCZOS))
 text(draw, 164, 62, 'Aireluma', 64, '#f5f3fc', True)
-text(draw, 68, 166, 'Your iPhone. On your desktop.', 27, '#d0cadc')
-text(draw, 70, 216, 'WINDOWS + LINUX   /   AIRPLAY   /   LOCAL NETWORK', 13, '#9f95b1')
-box(draw, (68, 273, 246, 306), 8, '#242030')
-text(draw, 81, 283, 'UP TO 4K  ·  60 FPS', 13, '#c7b8ef')
+text(draw, 68, 166, 'Your iPhone. On your desktop.', 32, '#eeeaf7')
+text(draw, 70, 216, 'Windows + Linux  ·  AirPlay  ·  Local network', 24, '#dcd4eb')
+box(draw, (68, 266, 346, 312), 8, '#2a223e')
+caption = 'Up to 4K  ·  60 FPS'
+caption_font = font(22, True)
+bounds = draw.textbbox((0, 0), caption, font=caption_font)
+caption_x = 207 * scale - (bounds[2] + bounds[0]) / 2
+caption_y = 289 * scale - (bounds[3] + bounds[1]) / 2
+draw.text((round(caption_x), round(caption_y)), caption, font=caption_font, fill='#f4eeff')
 box(draw, (966, 65, 1200, 230), 14, '#1d1928', '#5e5473')
 box(draw, (976, 75, 1190, 220), 8, '#282032')
 line(draw, [(1083, 230), (1083, 260)], '#786a92', 2)
@@ -50,7 +55,11 @@ box(draw, (831, 97, 861, 104), 3, '#101014')
 box(draw, (833, 246, 860, 249), 1, '#aea0c7')
 base.paste(logo.resize((42 * scale, 42 * scale), Image.Resampling.LANCZOS), (825 * scale, 153 * scale), logo.resize((42 * scale, 42 * scale), Image.Resampling.LANCZOS))
 line(draw, [(901, 173), (928, 173), (928, 148), (954, 148)], '#443a56', 2)
-text(draw, 1038, 283, 'Windows · Linux', 14, '#9f95b1')
+platform = 'Windows · Linux'
+platform_font = font(22)
+platform_bounds = draw.textbbox((0, 0), platform, font=platform_font)
+platform_x = 1083 * scale - (platform_bounds[2] + platform_bounds[0]) / 2
+draw.text((round(platform_x), 283 * scale), platform, font=platform_font, fill='#ddd5eb', anchor='lt')
 frames = []
 for frame in range(42):
     image = base.copy()
@@ -65,10 +74,10 @@ for frame in range(42):
     radius = 3.0
     draw.ellipse(((x-radius)*scale, (y-radius)*scale, (x+radius)*scale, (y+radius)*scale), fill='#a18ae6')
     frames.append(image.resize((1280, 360), Image.Resampling.LANCZOS))
-frames[12].save(output / 'banner.png', optimize=True)
-save_gif(frames, [70] * len(frames), output / 'banner.gif')
+frames[12].save(output / 'banner-readable.png', optimize=True)
+save_gif(frames, [70] * len(frames), output / 'banner-readable.gif')
 
 import subprocess
 import sys
 subprocess.run([sys.executable, str(root / 'scripts/render-theme-demo.py')], check=True)
-print('Rendered banner.png, banner.gif and theme-switch-click.gif')
+print('Rendered banner-readable.png, banner-readable.gif and theme-switch-click.gif')

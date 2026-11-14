@@ -1,5 +1,5 @@
 <div align="center">
-  <picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/images/banner.png"><img src="docs/images/banner.gif" alt="Aireluma — your iPhone on Windows and Linux" width="100%"></picture>
+  <picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/images/banner-readable.png"><img src="docs/images/banner-readable.gif" alt="Aireluma — your iPhone on Windows and Linux" width="100%"></picture>
   <p><strong>Your iPhone. On your PC.</strong><br>Screen and sound over your local network.</p>
   <p>
     <a href="https://github.com/Anchoder/Aireluma/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Anchoder/Aireluma?style=flat-square&color=7565e8"></a>
