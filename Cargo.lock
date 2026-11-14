@@ -1,0 +1,5 @@
+version = 4
+
+[[package]]
+name = "airplay-windows"
+version = "0.7.0"

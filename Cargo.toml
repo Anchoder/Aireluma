@@ -1,0 +1,7 @@
+[package]
+name = "airplay-windows"
+version = "0.7.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "A native Windows AirPlay receiver for iPhone screen and audio mirroring"
+repository = "https://github.com/Anchoder/Aireluma"

@@ -1,0 +1,16 @@
+Aireluma
+Copyright (C) 2026 Aireluma contributors
+
+Aireluma is distributed under the GNU General Public License, version 3 or later.
+
+Screen and audio reception is provided by UxPlay, maintained by the UxPlay
+contributors. UxPlay and its incorporated third-party components retain their
+original copyright and license notices.
+https://github.com/FDH2/UxPlay
+
+The Windows runtime includes GStreamer and other libraries distributed through
+MSYS2. Their individual notices are included with the installer under licenses/.
+Package versions and upstream references are listed in engine/runtime-packages.json.
+
+AirPlay, iPhone, iOS and Apple are trademarks of Apple Inc. Aireluma is an
+independent project and is not affiliated with or endorsed by Apple Inc.

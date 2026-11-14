@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/FDH2/UxPlay.git",
+  "revision": "05b0275cb1b726592700e47a6e0307544b3d3a52",
+  "license": "GPL-3.0-or-later",
+  "patch": "aireluma.patch"
+}

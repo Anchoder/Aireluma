@@ -1,0 +1,967 @@
+[
+  {
+    "package": "mingw-w64-ucrt-x86_64-SDL2",
+    "version": "2.32.10-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-SDL2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-aom",
+    "version": "3.15.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-aom"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-brotli",
+    "version": "1.2.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-brotli"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-bzip2",
+    "version": "1.0.8-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-bzip2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-c-ares",
+    "version": "1.34.8-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-c-ares"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-cairo",
+    "version": "1.18.6-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-cairo"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-chromaprint",
+    "version": "1.6.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-chromaprint"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-cppdap",
+    "version": "1.65.r11.g6464cd7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-cppdap"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-crypto++",
+    "version": "8.9.0-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-crypto++"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-curl",
+    "version": "8.22.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-curl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-dav1d",
+    "version": "1.5.4-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-dav1d"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-djvulibre",
+    "version": "3.5.30-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-djvulibre"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-expat",
+    "version": "2.8.5-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-expat"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-faac",
+    "version": "2.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-faac"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-faad2",
+    "version": "2.11.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-faad2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-fdk-aac",
+    "version": "2.0.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-fdk-aac"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-ffmpeg",
+    "version": "9.0.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-ffmpeg"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-fftw",
+    "version": "3.3.11-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-fftw"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-flac",
+    "version": "1.5.0-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-flac"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-flif",
+    "version": "0.4-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-flif"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-fluidsynth",
+    "version": "2.6.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-fluidsynth"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-fontconfig",
+    "version": "2.18.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-fontconfig"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-freetype",
+    "version": "2.14.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-freetype"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-fribidi",
+    "version": "1.0.17-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-fribidi"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gdk-pixbuf2",
+    "version": "2.44.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gdk-pixbuf2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gettext-runtime",
+    "version": "1.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gettext-runtime"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-ggml",
+    "version": "0.25.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-ggml"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-giflib",
+    "version": "6.1.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-giflib"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-glib2",
+    "version": "2.90.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-glib2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-glslang",
+    "version": "16.3.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-glslang"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gmp",
+    "version": "6.3.0-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gmp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gnutls",
+    "version": "3.8.13-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gnutls"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-graphene",
+    "version": "1.10.8-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-graphene"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-graphite2",
+    "version": "1.3.15-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-graphite2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gsm",
+    "version": "1.0.24-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gsm"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gst-libav",
+    "version": "1.28.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gst-libav"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gst-plugins-bad",
+    "version": "1.28.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gst-plugins-bad"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gst-plugins-bad-libs",
+    "version": "1.28.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gst-plugins-bad-libs"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gst-plugins-base",
+    "version": "1.28.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gst-plugins-base"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gst-plugins-good",
+    "version": "1.28.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gst-plugins-good"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-gstreamer",
+    "version": "1.28.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-gstreamer"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-harfbuzz",
+    "version": "14.5.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-harfbuzz"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-highway",
+    "version": "1.4.0-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-highway"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-imagemagick",
+    "version": "7.1.2.31-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-imagemagick"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-imath",
+    "version": "3.2.3-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-imath"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-isl",
+    "version": "0.28-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-isl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-jbigkit",
+    "version": "2.1-6",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-jbigkit"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-jsoncpp",
+    "version": "1.9.8-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-jsoncpp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-kvazaar",
+    "version": "2.3.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-kvazaar"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-lame",
+    "version": "3.100-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-lame"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-lcms2",
+    "version": "2.19.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-lcms2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-lerc",
+    "version": "4.1.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-lerc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libarchive",
+    "version": "3.8.9-6",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libarchive"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libass",
+    "version": "0.17.5-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libass"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libatomic",
+    "version": "16.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libatomic"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libb2",
+    "version": "0.98.1-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libb2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libbluray",
+    "version": "1.5.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libbluray"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libcaca",
+    "version": "0.99.beta20-8",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libcaca"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libcue",
+    "version": "2.3.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libcue"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdatrie",
+    "version": "0.2.14-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdatrie"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdca",
+    "version": "0.0.7-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdca"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libde265",
+    "version": "1.1.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libde265"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdeflate",
+    "version": "1.26-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdeflate"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdovi",
+    "version": "3.4.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdovi"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdvdcss",
+    "version": "1.6.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdvdcss"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdvdnav",
+    "version": "7.0.0-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdvdnav"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libdvdread",
+    "version": "7.1.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libdvdread"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libexif",
+    "version": "0.6.26-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libexif"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libffi",
+    "version": "3.8.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libffi"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libgcc",
+    "version": "16.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libgcc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libgfortran",
+    "version": "16.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libgfortran"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libgme",
+    "version": "0.6.5-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libgme"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libgomp",
+    "version": "16.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libgomp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libheif",
+    "version": "1.23.5-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libheif"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libiconv",
+    "version": "1.19-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libiconv"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libidn2",
+    "version": "2.3.8-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libidn2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libjpeg-turbo",
+    "version": "3.2.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libjpeg-turbo"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libjxl",
+    "version": "0.12.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libjxl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-liblc3",
+    "version": "1.1.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-liblc3"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-liblqr",
+    "version": "0.4.3-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-liblqr"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libltdl",
+    "version": "2.6.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libltdl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libmicrodns",
+    "version": "0.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libmicrodns"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libmodplug",
+    "version": "0.8.9.0-5",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libmodplug"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libmpcdec",
+    "version": "1~0.1+r475-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libmpcdec"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libmpeg2",
+    "version": "0.5.1-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libmpeg2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libmysofa",
+    "version": "1.3.5-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libmysofa"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libnice",
+    "version": "0.1.24-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libnice"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libogg",
+    "version": "1.3.6-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libogg"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libopenmpt",
+    "version": "0.8.9-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libopenmpt"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libplacebo",
+    "version": "7.360.1-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libplacebo"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libplist",
+    "version": "2.7.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libplist"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libpng",
+    "version": "1.6.58-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libpng"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libproxy",
+    "version": "0.5.12-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libproxy"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libpsl",
+    "version": "0.21.5-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libpsl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libquadmath",
+    "version": "16.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libquadmath"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libraqm",
+    "version": "0.11.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libraqm"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libraw",
+    "version": "0.22.2-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libraw"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libreplaygain",
+    "version": "475-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libreplaygain"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-librsvg",
+    "version": "2.63.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-librsvg"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libshout",
+    "version": "2.4.6-6",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libshout"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libsndfile",
+    "version": "1.2.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libsndfile"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libsoup3",
+    "version": "3.6.6-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libsoup3"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libsoxr",
+    "version": "0.1.3-5",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libsoxr"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libsrtp",
+    "version": "2.8.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libsrtp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libssh",
+    "version": "0.12.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libssh"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libssh2",
+    "version": "1.11.1-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libssh2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libstdc++",
+    "version": "16.2.0-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libstdc++"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libsystre",
+    "version": "1.0.2-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libsystre"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libtasn1",
+    "version": "4.21.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libtasn1"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libthai",
+    "version": "0.1.30-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libthai"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libtheora",
+    "version": "1.2.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libtheora"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libtiff",
+    "version": "4.7.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libtiff"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libtre",
+    "version": "0.9.0-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libtre"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libunibreak",
+    "version": "7.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libunibreak"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libunistring",
+    "version": "1.4.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libunistring"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libuv",
+    "version": "1.53.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libuv"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libva",
+    "version": "2.24.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libva"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libvorbis",
+    "version": "1.3.7-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libvorbis"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libvpl",
+    "version": "2.17.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libvpl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libvpx",
+    "version": "1.17.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libvpx"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libwebp",
+    "version": "1.6.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libwebp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libwinpthread",
+    "version": "14.0.0.r426.g4564ee4b5-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libwinpthread"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libwmf",
+    "version": "0.2.16-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libwmf"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libx264",
+    "version": "0.165.r3222.b35605a-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libx264"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-libxml2",
+    "version": "2.15.4-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-libxml2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-llama.cpp",
+    "version": "1~0.5.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-llama.cpp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-lz4",
+    "version": "1.10.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-lz4"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-lzo2",
+    "version": "2.10-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-lzo2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-mpc",
+    "version": "1.4.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-mpc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-mpdecimal",
+    "version": "4.0.1-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-mpdecimal"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-mpfr",
+    "version": "4.2.2-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-mpfr"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-mpg123",
+    "version": "1.33.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-mpg123"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-ncurses",
+    "version": "6.6-4",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-ncurses"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-nettle",
+    "version": "4.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-nettle"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-nghttp2",
+    "version": "1.70.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-nghttp2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-nghttp3",
+    "version": "1.18.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-nghttp3"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-ngtcp2",
+    "version": "1.25.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-ngtcp2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openal",
+    "version": "1.25.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openal"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openblas",
+    "version": "0.3.34-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openblas"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-opencl-icd",
+    "version": "2026.05.29-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-opencl-icd"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-opencore-amr",
+    "version": "0.1.6-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-opencore-amr"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openexr",
+    "version": "3.4.15-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openexr"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openh264",
+    "version": "2.6.0-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openh264"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openjpeg2",
+    "version": "2.5.4-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openjpeg2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openjph",
+    "version": "0.32.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openjph"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-openssl",
+    "version": "3.6.4-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-openssl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-opus",
+    "version": "1.6.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-opus"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-orc",
+    "version": "0.4.44-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-orc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-p11-kit",
+    "version": "0.26.5-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-p11-kit"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-pango",
+    "version": "1.58.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-pango"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-pcre2",
+    "version": "10.48-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-pcre2"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-pixman",
+    "version": "0.46.4-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-pixman"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-pkgconf",
+    "version": "1~3.0.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-pkgconf"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-portaudio",
+    "version": "1~19.7.0-7",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-portaudio"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-python",
+    "version": "3.14.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-python"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-rav1e",
+    "version": "0.8.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-rav1e"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-readline",
+    "version": "8.3.003-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-readline"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-rhash",
+    "version": "1.4.6-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-rhash"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-rtmpdump",
+    "version": "2.6-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-rtmpdump"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-sbc",
+    "version": "2.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-sbc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-sdl3",
+    "version": "3.4.16-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-sdl3"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-shaderc",
+    "version": "2026.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-shaderc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-soundtouch",
+    "version": "2.4.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-soundtouch"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-spandsp",
+    "version": "0.0.6-5",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-spandsp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-speex",
+    "version": "1.2.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-speex"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-speexdsp",
+    "version": "1.2.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-speexdsp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-spirv-cross",
+    "version": "1~1.4.357.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-spirv-cross"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-spirv-tools",
+    "version": "3~1.4.357.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-spirv-tools"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-sqlite3",
+    "version": "3.53.4-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-sqlite3"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-srt",
+    "version": "1.5.7-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-srt"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-svt-av1",
+    "version": "4.2.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-svt-av1"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-svt-jpeg-xs",
+    "version": "0.9.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-svt-jpeg-xs"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-taglib",
+    "version": "2.2.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-taglib"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-tcl",
+    "version": "8.6.18-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-tcl"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-termcap",
+    "version": "1.3.1-7",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-termcap"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-tk",
+    "version": "8.6.18-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-tk"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-twolame",
+    "version": "0.4.0-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-twolame"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-vid.stab",
+    "version": "1.1.2-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-vid.stab"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-vmaf",
+    "version": "3.2.1-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-vmaf"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-vo-amrwbenc",
+    "version": "0.1.3-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-vo-amrwbenc"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-vulkan-loader",
+    "version": "1~1.4.357.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-vulkan-loader"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-wavpack",
+    "version": "5.9.0-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-wavpack"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-webrtc-audio-processing-1",
+    "version": "1.3-5",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-webrtc-audio-processing-1"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-whisper.cpp",
+    "version": "1~1.9.4.r181.gd09f61a70-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-whisper.cpp"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-wineditline",
+    "version": "2.208-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-wineditline"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-x265",
+    "version": "4.3-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-x265"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-xvidcore",
+    "version": "1.3.7-5",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-xvidcore"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-xz",
+    "version": "5.8.4-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-xz"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-zbar",
+    "version": "0.23.93-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-zbar"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-zimg",
+    "version": "3.0.6-3",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-zimg"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-zlib",
+    "version": "1.3.2-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-zlib"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-zstd",
+    "version": "1.5.7-2",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-zstd"
+  },
+  {
+    "package": "mingw-w64-ucrt-x86_64-zvbi",
+    "version": "0.2.45-1",
+    "source": "https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-zvbi"
+  }
+]

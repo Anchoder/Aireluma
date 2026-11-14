@@ -1,0 +1,8 @@
+/target/
+/package/
+/installer/
+/artifacts/
+/engine/uxplay/
+*.log
+*.tmp
+/.vscode/

@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible issue with Aireluma
+title: "[Bug] "
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Aireluma, Windows and iOS versions
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: What happened?
+      description: Include reproduction steps, the expected result and the actual result. Do not include personal network details or private screen content.
+    validations:
+      required: true
+  - type: dropdown
+    id: photos
+    attributes:
+      label: Does a local video from Photos mirror correctly?
+      options:
+        - Not tested
+        - "Yes"
+        - "No"
