@@ -15,7 +15,7 @@
 
 Фактическое разрешение, кодек и частоту выбирает iPhone. Результат зависит от устройства, сети и компьютера. Некоторые приложения ограничивают захват или используют отдельный маршрут AirPlay для видео; такой контент может не отображаться.
 
-<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="images/themes.png"><img src="images/theme-transition.gif" alt="Предпросмотр плавной смены темы" width="480"></picture></div>
+<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="images/themes.png"><img src="images/theme-transition.gif" alt="Наведение, нажатие и плавная смена темы" width="480"></picture></div>
 
 ## Установка на Linux
 

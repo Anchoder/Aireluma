@@ -68,31 +68,7 @@ for frame in range(42):
 frames[12].save(output / 'banner.png', optimize=True)
 save_gif(frames, [70] * len(frames), output / 'banner.gif')
 
-source = Image.open(output / 'themes.png').convert('RGB')
-panels = [source.crop((192,104,568,662)), source.crop((712,104,1088,662))]
-theme_frames = []
-durations = []
-states = [(0.0, 1800)]
-states += [(i / 12, 20) for i in range(1,13)]
-states += [(1.0, 1800)]
-states += [(1 - i / 12, 20) for i in range(1,13)]
-for amount, duration in states:
-    amount = amount * amount * (3 - 2 * amount)
-    background = tuple(round(a + (b-a)*amount) for a,b in zip((238,237,244),(29,26,37)))
-    foreground = tuple(round(a + (b-a)*amount) for a,b in zip((84,76,101),(203,193,221)))
-    image = Image.new('RGB', (600 * scale, 700 * scale), background)
-    draw = ImageDraw.Draw(image)
-    title = 'Light  ↔  Dark'
-    width = draw.textlength(title, font=font(17)) / scale
-    text(draw, (600-width)/2, 28, title, 17, foreground)
-    panel = Image.blend(panels[0], panels[1], amount).resize((376*scale,558*scale),Image.Resampling.LANCZOS)
-    mask = Image.new('L',panel.size)
-    ImageDraw.Draw(mask).rounded_rectangle((0,0,panel.width-1,panel.height-1),10*scale,fill=255)
-    image.paste(panel,(112*scale,76*scale),mask)
-    caption = 'Switch themes. Keep receiving.'
-    width = draw.textlength(caption,font=font(14))/scale
-    text(draw,(600-width)/2,661,caption,14,foreground)
-    theme_frames.append(image.resize((600,700),Image.Resampling.LANCZOS))
-    durations.append(duration)
-save_gif(theme_frames,durations,output/'theme-transition.gif')
+import subprocess
+import sys
+subprocess.run([sys.executable, str(root / 'scripts/render-theme-demo.py')], check=True)
 print('Rendered banner.png, banner.gif and theme-transition.gif')

@@ -1,0 +1,53 @@
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFilter
+import importlib.util
+
+root=Path(__file__).resolve().parents[1]
+spec=importlib.util.spec_from_file_location('theme_demo',root/'scripts/render-theme-demo.py')
+demo=importlib.util.module_from_spec(spec)
+spec.loader.exec_module(demo)
+S=2
+image=Image.new('RGBA',(1280*S,640*S),'#0e0e15')
+glow=Image.new('RGBA',image.size)
+draw=ImageDraw.Draw(glow)
+draw.ellipse((670*S,-140*S,1390*S,730*S),fill=(100,64,196,74))
+draw.ellipse((1000*S,350*S,1410*S,800*S),fill=(59,98,175,38))
+image.alpha_composite(glow.filter(ImageFilter.GaussianBlur(95*S)))
+draw=ImageDraw.Draw(image)
+logo=Image.open(root/'assets/aireluma.png').convert('RGBA').resize((82*S,82*S),Image.Resampling.LANCZOS)
+image.alpha_composite(logo,(72*S,70*S))
+demo.text(draw,174,78,'Aireluma',66,'#f6f3ff',True)
+demo.text(draw,72,230,'Your iPhone.',49,'#f6f3ff',True)
+demo.text(draw,72,291,'On your desktop.',49,'#f6f3ff',True)
+demo.text(draw,75,386,'AirPlay for Windows & Linux',23,'#b3a9c7')
+for bounds,value in [((72,472,226,514),'Local network'),((240,472,412,514),'Screen + sound'),((426,472,576,514),'Up to 60 FPS')]:
+    demo.rect(draw,bounds,9,'#211b30','#40334f')
+    demo.centered(draw,bounds,value,15,'#d3c5e8')
+demo.text(draw,75,578,'github.com/Anchoder/Aireluma',16,'#857b98')
+shadow=Image.new('RGBA',image.size)
+sd=ImageDraw.Draw(shadow)
+sd.rounded_rectangle((842*S,100*S,1184*S,590*S),18*S,fill=(0,0,0,150))
+image.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(20*S)))
+panel=demo.window(1,True).resize((330*S,488*S),Image.Resampling.LANCZOS)
+image.alpha_composite(panel,(848*S,84*S))
+phone=Image.new('RGBA',(138*S,278*S))
+pd=ImageDraw.Draw(phone)
+demo.rect(pd,(0,0,138,278),24,'#17141e','#6b617d')
+demo.rect(pd,(5,5,133,273),20,'#0d0b12','#35303e')
+wallpaper=Image.new('RGBA',(122*S,260*S),'#21172f')
+paint=ImageDraw.Draw(wallpaper)
+paint.ellipse((-90*S,-5*S,210*S,280*S),fill='#46317b')
+paint.ellipse((-45*S,38*S,165*S,252*S),fill='#7050a9')
+paint.ellipse((10*S,100*S,220*S,300*S),fill='#42629c')
+wallpaper=wallpaper.filter(ImageFilter.GaussianBlur(20*S))
+mask=Image.new('L',wallpaper.size)
+ImageDraw.Draw(mask).rounded_rectangle((0,0,wallpaper.width-1,wallpaper.height-1),17*S,fill=255)
+phone.paste(wallpaper,(8*S,9*S),mask)
+pd=ImageDraw.Draw(phone)
+demo.rect(pd,(48,13,90,23),5,'#09070c')
+demo.rect(pd,(47,261,91,264),1,'#c3b3dd')
+image.alpha_composite(phone,(724*S,296*S))
+image.convert('RGB').resize((1280,640),Image.Resampling.LANCZOS).save(root/'docs/images/social-preview.png',optimize=True)
+result=root/'docs/images/social-preview.png'
+assert result.stat().st_size<1_000_000
+print(f'Social preview: 1280x640, {result.stat().st_size} bytes')
