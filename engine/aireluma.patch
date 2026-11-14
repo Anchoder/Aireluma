@@ -13,7 +13,7 @@ index 433e8b9..78ee83a 100644
        target_link_libraries( uxplay ${DBUS_LIBRARY})
  endif()
 diff --git a/lib/mdnsd/mdnsd.c b/lib/mdnsd/mdnsd.c
-index 97a1ba6..eae2188 100644
+index 97a1ba6..56b1682 100644
 --- a/lib/mdnsd/mdnsd.c
 +++ b/lib/mdnsd/mdnsd.c
 @@ -16,6 +16,7 @@
@@ -48,7 +48,7 @@ index 97a1ba6..eae2188 100644
                  }
              }
              pCurr = pCurr->Next;
-@@ -412,8 +419,7 @@ static uint32_t mdns_get_default_ipv4(void)
+@@ -412,19 +419,53 @@ static uint32_t mdns_get_default_ipv4(void)
  
      CLOSESOCKET(fd);
  #endif
@@ -58,7 +58,57 @@ index 97a1ba6..eae2188 100644
      
      return addr;
  }
-@@ -913,6 +919,17 @@ static void mdns_handle_query(mdnsd_t *mdnsd, const unsigned char *bytes,
+ 
+-static int mdns_get_default_ipv6(unsigned char addr[16], unsigned int *scope_id)
++static int mdns_get_default_ipv6(unsigned char addr[16], unsigned int *scope_id, uint32_t ipv4_addr)
+ {
+ #ifdef WIN32
+-    (void) addr;
+-    (void) scope_id;
+-    return 0;
++    ULONG size = 15000;
++    PIP_ADAPTER_ADDRESSES adapters = malloc(size);
++    int found = 0;
++    memset(addr, 0, 16);
++    *scope_id = 0;
++    if (!adapters) return 0;
++    ULONG flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
++    ULONG result = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, adapters, &size);
++    if (result == ERROR_BUFFER_OVERFLOW) {
++        free(adapters);
++        adapters = malloc(size);
++        if (!adapters) return 0;
++        result = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, adapters, &size);
++    }
++    if (result == NO_ERROR) {
++        for (PIP_ADAPTER_ADDRESSES adapter = adapters; adapter; adapter = adapter->Next) {
++            if (adapter->OperStatus != IfOperStatusUp || adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
++            int selected = 0;
++            for (PIP_ADAPTER_UNICAST_ADDRESS address = adapter->FirstUnicastAddress; address; address = address->Next) {
++                if (address->Address.lpSockaddr->sa_family == AF_INET &&
++                    ((struct sockaddr_in *) address->Address.lpSockaddr)->sin_addr.s_addr == ipv4_addr) selected = 1;
++            }
++            if (!selected) continue;
++            for (PIP_ADAPTER_UNICAST_ADDRESS address = adapter->FirstUnicastAddress; address; address = address->Next) {
++                if (address->Address.lpSockaddr->sa_family != AF_INET6) continue;
++                struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *) address->Address.lpSockaddr;
++                if (IN6_IS_ADDR_UNSPECIFIED(&ipv6->sin6_addr) || IN6_IS_ADDR_LOOPBACK(&ipv6->sin6_addr)) continue;
++                memcpy(addr, &ipv6->sin6_addr, 16);
++                *scope_id = ipv6->sin6_scope_id ? ipv6->sin6_scope_id : adapter->Ipv6IfIndex;
++                found = *scope_id != 0;
++                if (IN6_IS_ADDR_LINKLOCAL(&ipv6->sin6_addr)) break;
++            }
++            break;
++        }
++    }
++    free(adapters);
++    return found;
+ #else
++    (void) ipv4_addr;
+     struct ifaddrs *ifaddr = NULL;
+     struct ifaddrs *ifa;
+     int found = 0;
+@@ -913,6 +954,17 @@ static void mdns_handle_query(mdnsd_t *mdnsd, const unsigned char *bytes,
      MUTEX_UNLOCK(mdnsd->mutex);
  }
  
@@ -76,7 +126,7 @@ index 97a1ba6..eae2188 100644
  static THREAD_RETVAL mdns_thread(void *arg)
  {
      mdnsd_t *mdnsd = arg;
-@@ -925,12 +942,23 @@ static THREAD_RETVAL mdns_thread(void *arg)
+@@ -925,12 +977,23 @@ static THREAD_RETVAL mdns_thread(void *arg)
          int max_fd = -1;
          int running;
          int ret;
@@ -100,7 +150,16 @@ index 97a1ba6..eae2188 100644
  
          if (!running || (fd4 == -1 && fd6 == -1)) {
              break;
-@@ -1056,6 +1084,8 @@ int mdnsd_start(mdnsd_t *mdnsd)
+@@ -1036,7 +1099,7 @@ int mdnsd_start(mdnsd_t *mdnsd)
+     int error6 = 0;
+ 
+     mdnsd->ipv4_addr = mdns_get_default_ipv4();
+-    mdns_get_default_ipv6(mdnsd->ipv6_addr, &mdnsd->ipv6_scope_id);
++    mdns_get_default_ipv6(mdnsd->ipv6_addr, &mdnsd->ipv6_scope_id, mdnsd->ipv4_addr);
+ 
+     mdnsd->sock_fd4 = mdns_open_socket4(mdnsd->ipv4_addr);
+     if (mdnsd->sock_fd4 < 0) {
+@@ -1056,6 +1119,8 @@ int mdnsd_start(mdnsd_t *mdnsd)
      }
  
      mdnsd->running = 1;
