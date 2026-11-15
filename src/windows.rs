@@ -927,6 +927,34 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
         FMT_W,
     );
 }
+// Comet-style spinner: a faded tail behind a bright head, eased rotation.
+unsafe fn spinner(g: H, cx: f32, cy: f32, rad: f32, col: u32, alpha: f32, ph: f32) {
+    stroke_circle(g, cx, cy, rad, argb(col, 0.12 * alpha), 2.0);
+    let head = ph * 300.0 + 55.0 * (ph * 2.1).sin();
+    let tail = 210.0 + 40.0 * (ph * 1.3).sin();
+    let steps = 30;
+    let step = tail / steps as f32;
+    for i in 0..steps {
+        let t = i as f32 / steps as f32;
+        let al = (1.0 - t).powf(1.5) * 0.95 * alpha;
+        let mut p = null_mut();
+        GdipCreatePen1(argb(col, al), 2.6, 0, &mut p);
+        let start = head - (i + 1) as f32 * step;
+        GdipDrawArc(
+            g,
+            p,
+            cx - rad,
+            cy - rad,
+            rad * 2.0,
+            rad * 2.0,
+            start,
+            step + 0.9,
+        );
+        GdipDeletePen(p);
+    }
+    let (sn, cs) = head.to_radians().sin_cos();
+    fill_circle(g, cx + rad * cs, cy + rad * sn, 2.3, argb(col, alpha));
+}
 unsafe fn draw_hero(g: H, a: f32) {
     let (x, y, w, h) = (20.0, 92.0, 340.0, 212.0);
     if !PARTIAL {
@@ -1002,19 +1030,7 @@ unsafe fn draw_hero(g: H, a: f32) {
         stroke_circle(g, cx, cy, r + 7.0, argb(col, 0.28 * UI.a_conn * a), 2.0);
     }
     if UI.a_start > 0.004 {
-        let p = pen(argb(col, 0.95 * UI.a_start * a), 2.6);
-        GdipDrawArc(
-            g,
-            p,
-            cx - r - 8.0,
-            cy - r - 8.0,
-            (r + 8.0) * 2.0,
-            (r + 8.0) * 2.0,
-            ph * 420.0,
-            95.0,
-        );
-        GdipDeletePen(p);
-        stroke_circle(g, cx, cy, r + 8.0, argb(col, 0.14 * UI.a_start * a), 2.0);
+        spinner(g, cx, cy, r + 8.0, col, UI.a_start * a, ph);
     }
     // disk + glyph
     fill_circle(g, cx, cy, r, argb(mix(pc(P_INPUT), col, 0.13), a));
@@ -1470,7 +1486,11 @@ unsafe fn tick(h: H) {
         UI.timer = false;
     } else {
         // Ambient animation only needs half the frame rate.
-        let want = if UI.partial { 33 } else { 16 };
+        let want = if UI.partial && UI.a_start < 0.01 {
+            33
+        } else {
+            16
+        };
         if UI.interval != want {
             UI.interval = want;
             SetTimer(h, 2, want, null_mut());
