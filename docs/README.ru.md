@@ -9,13 +9,18 @@
 - Повтор экрана и звука iPhone по AirPlay в локальной сети.
 - Приём с запросом HEVC, разрешения до 4K и частоты до 60 FPS.
 - Светлая и тёмная темы с плавным переходом и сохранением выбора.
+- Интерфейс на русском, английском и немецком: язык переключается в окне (пока только в версии для Windows).
 - Работа в трее после закрытия окна на Windows.
 - Автоматическое окно просмотра: Direct3D12 на Windows, GStreamer на Linux.
 - Обычный установщик и удаление через параметры Windows.
 
 Фактическое разрешение, кодек и частоту выбирает iPhone. Результат зависит от устройства, сети и компьютера. Некоторые приложения ограничивают захват или используют отдельный маршрут AirPlay для видео; такой контент может не отображаться.
 
-<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="images/themes.png"><img src="images/theme-switch-click.gif" alt="Наведение, нажатие и плавная смена темы" width="480"></picture></div>
+<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="images/themes.ru.png"><img src="images/interface-tour.ru.gif" alt="Смена темы и языка, запуск приёма и ожидание iPhone" width="380"></picture></div>
+
+<details><summary>Обе темы рядом</summary><img src="images/themes.ru.png" alt="Светлая и тёмная темы" width="100%"></details>
+
+<details><summary>Три языка интерфейса</summary><img src="images/languages.png" alt="Интерфейс на английском, немецком и русском" width="100%"></details>
 
 ## Установка на Linux
 
@@ -30,7 +35,7 @@ sudo apt install ./Aireluma_0.8.3_amd64.deb
 ## Подключение
 
 1. Скачайте установщик из [последнего релиза](https://github.com/Anchoder/Aireluma/releases/latest).
-2. Установите Aireluma, запустите её и нажмите **«Включить AirPlay»**.
+2. Установите Aireluma, запустите её и нажмите **«Включить AirPlay»** (в английском интерфейсе — **Start AirPlay**, в немецком — **AirPlay starten**; язык выбирается внизу окна).
 3. Подключите iPhone и компьютер к одной локальной сети. Компьютер может использовать Ethernet.
 4. На iPhone откройте **Пункт управления → Повтор экрана** и выберите **Aireluma**.
 

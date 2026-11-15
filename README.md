@@ -20,17 +20,20 @@ Aireluma brings iPhone screen mirroring and audio to Windows and Linux through A
 | Screen and audio | Mirror your iPhone with sound on your PC |
 | Up to 4K / 60 FPS | Request HEVC and a high-quality stream from your device |
 | Light and dark | Smooth light-to-dark transitions; your choice is remembered |
+| Three languages | English, Deutsch and Русский, switched in the window (Windows) |
 | Local network | Reception works on your LAN; a wired PC is supported |
 | System tray on Windows | Keep receiving after closing the control window |
 | Native playback | Direct3D12 on Windows; GStreamer video playback on Linux |
 
 Resolution, codec and frame rate are negotiated by the iPhone and depend on your device, network and computer. The requested maximum is not a guaranteed output mode.
 
-## Two themes. One compact interface.
+## Two themes, three languages. One compact interface.
 
-<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/images/themes.png"><img src="docs/images/theme-switch-click.gif" alt="Cursor click demonstrating the light and dark theme switch" width="480"></picture></div>
+<div align="center"><picture><source media="(prefers-reduced-motion: reduce)" srcset="docs/images/themes.png"><img src="docs/images/interface-tour.gif" alt="Switching the theme and the language, then starting reception and waiting for an iPhone" width="380"></picture></div>
 
 <details><summary>See both themes side by side</summary><img src="docs/images/themes.png" alt="Light and dark interface previews" width="100%"></details>
+
+<details><summary>See the three languages</summary><img src="docs/images/languages.png" alt="The interface in English, German and Russian" width="100%"></details>
 
 ## Install
 
@@ -47,11 +50,11 @@ Open Aireluma from your application menu. To uninstall: `sudo apt remove airelum
 ## Get connected
 
 1. Download **Aireluma-Setup.exe** from the [latest release](https://github.com/Anchoder/Aireluma/releases/latest) and install it.
-2. Open Aireluma and select **«Включить AirPlay»**.
+2. Open Aireluma and select **Start AirPlay** (**«Включить AirPlay»** in Russian, **AirPlay starten** in German).
 3. Connect your iPhone and PC to the same local network. The PC can use Ethernet.
 4. On your iPhone, open **Control Center → Screen Mirroring → Aireluma**.
 
-The current interface is in Russian. On Windows, closing the window keeps Aireluma in the tray; use the tray menu to exit. On Linux, closing the window stops reception and exits.
+On Windows the interface is available in English, German and Russian. Choose one with the switch at the bottom of the window; the first launch follows your Windows display language. The Linux interface is currently in Russian. On Windows, closing the window keeps Aireluma in the tray; use the tray menu to exit. On Linux, closing the window stops reception and exits.
 
 ## Before opening an issue
 

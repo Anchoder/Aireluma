@@ -1,4 +1,4 @@
-#![allow(static_mut_refs, dead_code)]
+#![allow(static_mut_refs)]
 use std::{
     env,
     ffi::OsStr,
@@ -83,6 +83,20 @@ struct Paint {
     restore: i32,
     inc_update: i32,
     reserved: [u8; 32],
+}
+#[repr(C)]
+struct BmiHeader {
+    size: u32,
+    width: i32,
+    height: i32,
+    planes: u16,
+    bpp: u16,
+    compression: u32,
+    size_image: u32,
+    xppm: i32,
+    yppm: i32,
+    used: u32,
+    important: u32,
 }
 #[repr(C)]
 struct TrackMouse {
@@ -208,13 +222,20 @@ extern "system" {
 extern "system" {
     fn GetModuleHandleW(name: *const u16) -> H;
     fn GetTickCount64() -> u64;
+    fn GetUserDefaultUILanguage() -> u16;
 }
 #[link(name = "gdi32")]
 extern "system" {
     fn CreateCompatibleDC(dc: H) -> H;
-    fn CreateCompatibleBitmap(dc: H, w: i32, h: i32) -> H;
+    fn CreateDIBSection(
+        dc: H,
+        bmi: *const BmiHeader,
+        usage: u32,
+        bits: *mut *mut core::ffi::c_void,
+        section: H,
+        offset: u32,
+    ) -> H;
     fn BitBlt(dst: H, x: i32, y: i32, w: i32, h: i32, src: H, sx: i32, sy: i32, rop: u32) -> i32;
-    fn DeleteDC(dc: H) -> i32;
     fn CreateSolidBrush(color: u32) -> H;
     fn SelectObject(dc: H, obj: H) -> H;
     fn DeleteObject(obj: H) -> i32;
@@ -246,13 +267,13 @@ extern "system" {
     fn GdipSetTextRenderingHint(g: H, m: i32) -> i32;
     fn GdipSetInterpolationMode(g: H, m: i32) -> i32;
     fn GdipSetPixelOffsetMode(g: H, m: i32) -> i32;
-    fn GdipGraphicsClear(g: H, color: u32) -> i32;
+    fn GdipSetClipRect(g: H, x: f32, y: f32, w: f32, h: f32, mode: i32) -> i32;
+    fn GdipFillRectangle(g: H, brush: H, x: f32, y: f32, w: f32, h: f32) -> i32;
     fn GdipSaveGraphics(g: H, state: *mut u32) -> i32;
     fn GdipRestoreGraphics(g: H, state: u32) -> i32;
     fn GdipScaleWorldTransform(g: H, x: f32, y: f32, order: i32) -> i32;
     fn GdipTranslateWorldTransform(g: H, x: f32, y: f32, order: i32) -> i32;
     fn GdipSetClipPath(g: H, path: H, mode: i32) -> i32;
-    fn GdipResetClip(g: H) -> i32;
     fn GdipCreateSolidFill(color: u32, brush: *mut H) -> i32;
     fn GdipDeleteBrush(brush: H) -> i32;
     fn GdipCreateLineBrush(
@@ -307,6 +328,14 @@ extern "system" {
         lines: *mut i32,
     ) -> i32;
     fn GdipCreateBitmapFromHICON(icon: H, bmp: *mut H) -> i32;
+    fn GdipCreateBitmapFromScan0(
+        w: i32,
+        h: i32,
+        stride: i32,
+        fmt: i32,
+        scan0: *mut u8,
+        bmp: *mut H,
+    ) -> i32;
     fn GdipCreateImageAttributes(a: *mut H) -> i32;
     fn GdipDisposeImageAttributes(a: H) -> i32;
     fn GdipSetImageAttributesColorMatrix(
@@ -384,8 +413,14 @@ struct Ui {
     phase: f64,
     last: u64,
     timer: bool,
+    interval: u32,
+    partial: bool,
     status: Status,
-    prev_status: Status,
+    prev_text: (String, String),
+    lang_pos: f32,
+    lang_t: f32,
+    lang_fade: f32,
+    over_seg: i32,
     status_fade: f32,
     over_btn: bool,
     over_tog: bool,
@@ -414,8 +449,14 @@ static mut UI: Ui = Ui {
     phase: 0.0,
     last: 0,
     timer: false,
+    interval: 16,
+    partial: false,
     status: Status::Off,
-    prev_status: Status::Off,
+    prev_text: (String::new(), String::new()),
+    lang_pos: 0.0,
+    lang_t: 0.0,
+    lang_fade: 1.0,
+    over_seg: -1,
     status_fade: 1.0,
     over_btn: false,
     over_tog: false,
@@ -429,12 +470,16 @@ static mut UI: Ui = Ui {
 };
 
 const WIN_W: f32 = 380.0;
-const WIN_H: f32 = 620.0;
+const WIN_H: f32 = 668.0;
 const BTN: (f32, f32, f32, f32) = (20.0, 404.0, 340.0, 52.0);
-const TOG: (f32, f32, f32, f32) = (300.0, 33.0, 56.0, 32.0);
+const TOG: (f32, f32, f32, f32) = (304.0, 33.0, 56.0, 32.0);
+// Region around the status indicator that changes while the receiver is running.
+const AMBIENT: (f32, f32, f32, f32) = (114.0, 92.0, 152.0, 144.0);
+const SEG: (f32, f32, f32, f32) = (82.0, 628.0, 216.0, 28.0);
 const FIELD: (f32, f32, f32, f32) = (20.0, 340.0, 340.0, 48.0);
 
 static mut DARK: bool = false;
+static mut PARTIAL: bool = false;
 static mut GENERATION: usize = 0;
 static mut RECEIVER_READY: bool = false;
 static mut VIDEO_WINDOW: H = null_mut();
@@ -462,14 +507,10 @@ static mut FMT_C: H = null_mut();
 static mut FMT_R: H = null_mut();
 static mut FMT_W: H = null_mut();
 static mut IMG_HEAD: H = null_mut();
-static mut IMG_LIGHT: [H; 3] = [null_mut(); 3];
-static mut IMG_DARK: [H; 3] = [null_mut(); 3];
+static mut IMG_GLOW: H = null_mut();
 
 fn wide(s: &str) -> Vec<u16> {
     OsStr::new(s).encode_wide().chain(Some(0)).collect()
-}
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    a + (b - a) * t
 }
 fn mix(a: u32, b: u32, t: f32) -> u32 {
     let t = t.clamp(0.0, 1.0);
@@ -609,14 +650,22 @@ unsafe fn measure(g: H, s: &str, font: H) -> f32 {
     o.w
 }
 unsafe fn image(g: H, im: H, x: f32, y: f32, w: f32, h: f32, size: f32, a: f32) {
+    image_tint(g, im, x, y, w, h, size, a, 0xFFFFFF);
+}
+unsafe fn image_tint(g: H, im: H, x: f32, y: f32, w: f32, h: f32, size: f32, a: f32, rgb: u32) {
     if im.is_null() || a <= 0.003 {
         return;
     }
     let mut at = null_mut();
     GdipCreateImageAttributes(&mut at);
+    let (r, gr, b) = (
+        ((rgb >> 16) & 255) as f32 / 255.0,
+        ((rgb >> 8) & 255) as f32 / 255.0,
+        (rgb & 255) as f32 / 255.0,
+    );
     let m: [f32; 25] = [
-        1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        a, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        r, 0.0, 0.0, 0.0, 0.0, 0.0, gr, 0.0, 0.0, 0.0, 0.0, 0.0, b, 0.0, 0.0, 0.0, 0.0, 0.0, a,
+        0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
     ];
     GdipSetImageAttributesColorMatrix(at, 0, 1, m.as_ptr(), null(), 0);
     GdipDrawImageRectRect(
@@ -673,62 +722,251 @@ unsafe fn init_gdip() {
     FMT_C = format(1, false);
     FMT_R = format(2, false);
     FMT_W = format(1, true);
-    let inst = GetModuleHandleW(null());
-    let load = |id: usize, size: i32| -> H {
-        let icon = LoadImageW(inst, id as *const u16, 1, size, size, 0);
-        let mut bmp = null_mut();
-        if !icon.is_null() {
-            GdipCreateBitmapFromHICON(icon, &mut bmp);
-            DestroyIcon(icon);
-        }
-        bmp
-    };
-    IMG_HEAD = load(1, 96);
-    for i in 0..3 {
-        IMG_DARK[i] = load(i + 2, 32);
-        IMG_LIGHT[i] = load(i + 5, 32);
+    let icon = LoadImageW(GetModuleHandleW(null()), 1usize as *const u16, 1, 96, 96, 0);
+    if !icon.is_null() {
+        GdipCreateBitmapFromHICON(icon, &mut IMG_HEAD);
+        DestroyIcon(icon);
     }
+    // Radial falloff mask for the ambient glow, tinted at draw time.
+    let n = 240usize;
+    let mut px = vec![0u32; n * n];
+    for y in 0..n {
+        for x in 0..n {
+            let (dx, dy) = (x as f32 + 0.5 - 120.0, y as f32 + 0.5 - 120.0);
+            let a =
+                ((1.0 - (dx * dx + dy * dy).sqrt() / 120.0).clamp(0.0, 1.0) * 255.0).round() as u32;
+            px[y * n + x] = (a << 24) | (a << 16) | (a << 8) | a;
+        }
+    }
+    let scan0 = Box::leak(px.into_boxed_slice()).as_mut_ptr() as *mut u8;
+    GdipCreateBitmapFromScan0(
+        n as i32,
+        n as i32,
+        (n * 4) as i32,
+        0x000E200B,
+        scan0,
+        &mut IMG_GLOW,
+    );
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Lang {
+    Ru = 0,
+    En = 1,
+    De = 2,
+}
+const LANGS: [Lang; 3] = [Lang::Ru, Lang::En, Lang::De];
+const LANG_NAMES: [&str; 3] = ["Русский", "English", "Deutsch"];
+#[derive(Clone, Copy)]
+enum Str {
+    Subtitle,
+    FieldLabel,
+    Start,
+    Stop,
+    StepsTitle,
+    Step1,
+    Step2,
+    FeatScreen,
+    FeatLocal,
+    FeatFps,
+    OffTitle,
+    OffHint,
+    StartingTitle,
+    StartingHint,
+    WaitTitle,
+    WaitHint,
+    ConnTitle,
+    ConnHint,
+    StoppedTitle,
+    StoppedHint,
+    FailTitle,
+    FailHint,
+    ErrTitle,
+    ErrText,
+    TrayTip,
+    VideoTitle,
+    TrayOpen,
+    TrayExit,
+}
+static mut LANG: Lang = Lang::Ru;
+/// Translation table: Russian, English, German.
+fn tr(k: Str) -> &'static str {
+    let t: [&str; 3] = match k {
+        Str::Subtitle => [
+            "Повтор экрана с iOS",
+            "iOS screen mirroring",
+            "iOS-Bildschirmspiegelung",
+        ],
+        Str::FieldLabel => [
+            "Имя устройства в AirPlay",
+            "Device name in AirPlay",
+            "Gerätename in AirPlay",
+        ],
+        Str::Start => ["Включить AirPlay", "Start AirPlay", "AirPlay starten"],
+        Str::Stop => ["Остановить приём", "Stop receiving", "Empfang beenden"],
+        Str::StepsTitle => ["Как подключиться", "How to connect", "So verbinden Sie"],
+        Str::Step1 => [
+            "Откройте «Повтор экрана» в Пункте управления",
+            "Open Screen Mirroring in Control Center",
+            "Kontrollzentrum → Bildschirmsynchronisierung",
+        ],
+        Str::Step2 => [
+            "Выберите устройство — имя указано выше",
+            "Pick the device — its name is shown above",
+            "Gerät wählen – der Name steht oben",
+        ],
+        Str::FeatScreen => ["Экран и звук", "Screen & audio", "Bild & Ton"],
+        Str::FeatLocal => ["Локально", "Local network", "Lokal"],
+        Str::FeatFps => ["до 60 FPS", "up to 60 FPS", "bis 60 FPS"],
+        Str::OffTitle => ["Приём выключен", "Receiver off", "Empfang aus"],
+        Str::OffHint => [
+            "Нажмите «{}», чтобы начать",
+            "Click “{}” to begin",
+            "Klicken Sie auf „{}“, um zu beginnen",
+        ],
+        Str::StartingTitle => [
+            "Запуск приёмника…",
+            "Starting receiver…",
+            "Empfänger startet…",
+        ],
+        Str::StartingHint => [
+            "Это займёт пару секунд",
+            "This takes a few seconds",
+            "Das dauert einen Moment",
+        ],
+        Str::WaitTitle => ["Ожидание iPhone", "Waiting for iPhone", "Warte auf iPhone"],
+        Str::WaitHint => [
+            "Откройте «Повтор экрана» в Пункте управления и выберите «{}»",
+            "Open Screen Mirroring in Control Center and choose “{}”",
+            "Kontrollzentrum → Bildschirmsynchronisierung → „{}“",
+        ],
+        Str::ConnTitle => [
+            "Экран подключён",
+            "Screen connected",
+            "Bildschirm verbunden",
+        ],
+        Str::ConnHint => [
+            "Изображение и звук передаются на этот компьютер",
+            "Picture and sound are streaming to this computer",
+            "Bild und Ton werden auf diesen Computer übertragen",
+        ],
+        Str::StoppedTitle => [
+            "Приёмник остановлен",
+            "Receiver stopped",
+            "Empfänger angehalten",
+        ],
+        Str::StoppedHint => [
+            "Нажмите «{}», чтобы запустить снова",
+            "Click “{}” to start again",
+            "Klicken Sie auf „{}“, um neu zu starten",
+        ],
+        Str::FailTitle => [
+            "Не удалось запустить приёмник",
+            "Could not start the receiver",
+            "Empfänger konnte nicht starten",
+        ],
+        Str::FailHint => [
+            "Нажмите «{}», чтобы повторить",
+            "Click “{}” to try again",
+            "Klicken Sie auf „{}“, um es erneut zu versuchen",
+        ],
+        Str::ErrTitle => ["Ошибка", "Error", "Fehler"],
+        Str::ErrText => [
+            "Не удалось запустить приёмник: {}",
+            "Could not start the receiver: {}",
+            "Empfänger konnte nicht gestartet werden: {}",
+        ],
+        Str::TrayTip => [
+            "Aireluma — приём экрана iPhone",
+            "Aireluma — iPhone screen receiver",
+            "Aireluma — iPhone-Bildschirmempfang",
+        ],
+        Str::VideoTitle => [
+            "Aireluma — экран iPhone",
+            "Aireluma — iPhone screen",
+            "Aireluma — iPhone-Bildschirm",
+        ],
+        Str::TrayOpen => ["Открыть Aireluma", "Open Aireluma", "Aireluma öffnen"],
+        Str::TrayExit => ["Выйти", "Quit", "Beenden"],
+    };
+    t[unsafe { LANG } as usize]
+}
+fn language_path() -> PathBuf {
+    PathBuf::from(env::var_os("APPDATA").unwrap_or_default())
+        .join("Aireluma")
+        .join("language")
+}
+/// Saved choice first, then the Windows display language, otherwise English.
+fn load_lang() -> Lang {
+    match fs::read_to_string(language_path())
+        .ok()
+        .as_deref()
+        .map(str::trim)
+    {
+        Some("ru") => Lang::Ru,
+        Some("en") => Lang::En,
+        Some("de") => Lang::De,
+        _ => match unsafe { GetUserDefaultUILanguage() } & 0x3ff {
+            0x19 => Lang::Ru,
+            0x07 => Lang::De,
+            _ => Lang::En,
+        },
+    }
+}
+unsafe fn set_lang(h: H, l: Lang) {
+    if LANG == l {
+        return;
+    }
+    UI.prev_text = status_text(UI.status);
+    LANG = l;
+    UI.status_fade = 0.0;
+    UI.lang_fade = 0.0;
+    UI.lang_t = l as i32 as f32;
+    let path = language_path();
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let _ = fs::write(path, ["ru", "en", "de"][l as usize]);
+    VIDEO_WINDOW = null_mut();
+    if TRAY_READY {
+        tray(h, 1);
+    }
+    kick(h);
+}
+// Localized text fades back in after a language switch.
+unsafe fn lfade() -> f32 {
+    0.2 + 0.8 * ease_out(UI.lang_fade)
 }
 
 // ───────────────────────────── Status text ─────────────────────────────
 fn status_text(s: Status) -> (String, String) {
     unsafe {
+        let start = tr(Str::Start);
         match s {
             Status::Off => (
-                "Приём выключен".into(),
-                "Нажмите «Включить AirPlay», чтобы начать".into(),
+                tr(Str::OffTitle).into(),
+                tr(Str::OffHint).replace("{}", start),
             ),
-            Status::Starting => ("Запуск приёмника…".into(), "Это займёт пару секунд".into()),
+            Status::Starting => (tr(Str::StartingTitle).into(), tr(Str::StartingHint).into()),
             Status::Waiting => (
-                "Ожидание iPhone".into(),
-                format!(
-                    "Откройте «Повтор экрана» в Пункте управления и выберите «{}»",
-                    UI.name
-                ),
+                tr(Str::WaitTitle).into(),
+                tr(Str::WaitHint).replace("{}", &UI.name),
             ),
-            Status::Connected => (
-                "Экран подключён".into(),
-                "Изображение и звук передаются на этот компьютер".into(),
+            Status::Connected => (tr(Str::ConnTitle).into(), tr(Str::ConnHint).into()),
+            Status::Failed if UI.was_ready => (
+                tr(Str::StoppedTitle).into(),
+                tr(Str::StoppedHint).replace("{}", start),
             ),
-            Status::Failed => {
-                if UI.was_ready {
-                    (
-                        "Приёмник остановлен".into(),
-                        "Нажмите «Включить AirPlay», чтобы запустить снова".into(),
-                    )
-                } else {
-                    (
-                        "Не удалось запустить приёмник".into(),
-                        "Нажмите «Включить AirPlay», чтобы повторить".into(),
-                    )
-                }
-            }
+            Status::Failed => (
+                tr(Str::FailTitle).into(),
+                tr(Str::FailHint).replace("{}", start),
+            ),
         }
     }
 }
 unsafe fn set_status(h: H, s: Status) {
     if UI.status != s {
-        UI.prev_status = UI.status;
+        UI.prev_text = status_text(UI.status);
         UI.status = s;
         UI.status_fade = 0.0;
     }
@@ -797,7 +1035,11 @@ unsafe fn glyph(g: H, cx: f32, cy: f32, k: f32, color: u32) {
 unsafe fn draw_toggle(g: H, a: f32) {
     let (x, y, w, h) = TOG;
     let t = UI.dark;
-    let off = mix(pc(NEUTRAL), 0xFFFFFF, UI.hover_tog * 0.35);
+    let off = mix(
+        mix(pc(NEUTRAL), pc(TER), 0.22),
+        0xFFFFFF,
+        UI.hover_tog * 0.25,
+    );
     let on = mix(pc(ACC_B), 0xFFFFFF, UI.hover_tog * 0.12);
     fill_rr(g, x, y, w, h, h / 2.0, argb(mix(off, on, t), a));
     let kx = x + 16.0 + t * (w - 32.0);
@@ -844,16 +1086,15 @@ unsafe fn draw_toggle(g: H, a: f32) {
         );
     }
 }
-unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
+unsafe fn draw_status_block(g: H, title: &str, hint: &str, a: f32, dy: f32) {
     if a <= 0.01 {
         return;
     }
-    let (title, hint) = status_text(s);
     text(
         g,
-        &title,
+        title,
         20.0,
-        214.0 + dy,
+        209.0 + dy,
         340.0,
         28.0,
         F_HERO,
@@ -862,9 +1103,9 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
     );
     text(
         g,
-        &hint,
+        hint,
         48.0,
-        244.0 + dy,
+        239.0 + dy,
         284.0,
         40.0,
         F_BODY,
@@ -872,19 +1113,49 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
         FMT_W,
     );
 }
+// Comet-style spinner: a faded tail behind a bright head, eased rotation.
+unsafe fn spinner(g: H, cx: f32, cy: f32, rad: f32, col: u32, alpha: f32, ph: f32) {
+    stroke_circle(g, cx, cy, rad, argb(col, 0.12 * alpha), 2.0);
+    let head = ph * 300.0 + 55.0 * (ph * 2.1).sin();
+    let tail = 210.0 + 40.0 * (ph * 1.3).sin();
+    let steps = 30;
+    let step = tail / steps as f32;
+    for i in 0..steps {
+        let t = i as f32 / steps as f32;
+        let al = (1.0 - t).powf(1.5) * 0.95 * alpha;
+        let mut p = null_mut();
+        GdipCreatePen1(argb(col, al), 2.6, 0, &mut p);
+        let start = head - (i + 1) as f32 * step;
+        GdipDrawArc(
+            g,
+            p,
+            cx - rad,
+            cy - rad,
+            rad * 2.0,
+            rad * 2.0,
+            start,
+            step + 0.9,
+        );
+        GdipDeletePen(p);
+    }
+    let (sn, cs) = head.to_radians().sin_cos();
+    fill_circle(g, cx + rad * cs, cy + rad * sn, 2.3, argb(col, alpha));
+}
 unsafe fn draw_hero(g: H, a: f32) {
     let (x, y, w, h) = (20.0, 92.0, 340.0, 212.0);
-    shadow(
-        g,
-        x,
-        y,
-        w,
-        h,
-        24.0,
-        0x2B2B4A,
-        a * (1.0 - UI.dark) * 0.5,
-        6.0,
-    );
+    if !PARTIAL {
+        shadow(
+            g,
+            x,
+            y,
+            w,
+            h,
+            24.0,
+            0x2B2B4A,
+            a * (1.0 - UI.dark) * 0.5,
+            6.0,
+        );
+    }
     fill_rr(g, x, y, w, h, 24.0, argb(pc(CARD), a));
     stroke_rr(
         g,
@@ -897,17 +1168,30 @@ unsafe fn draw_hero(g: H, a: f32) {
         1.0,
     );
     let clip = rr_path(x, y, w, h, 24.0);
-    GdipSetClipPath(g, clip, 0);
-    let (cx, cy, r) = (190.0f32, 158.0f32, 32.0f32);
+    let mut saved = 0;
+    GdipSaveGraphics(g, &mut saved);
+    GdipSetClipPath(g, clip, 1);
+    let (cx, cy, r) = (190.0f32, 153.0f32, 32.0f32);
     let act = UI.a_start.max(UI.a_wait);
     let mut col = mix(pc(TER), pc(ACC_TXT), act);
     col = mix(col, pc(GREEN), UI.a_conn);
     col = mix(col, pc(RED), UI.a_fail);
     // ambient glow
     let glow = act * 0.6 + UI.a_conn * 0.8 + UI.a_fail * 0.5;
-    for i in 0..16 {
-        let rr = 120.0 - i as f32 * 6.0;
-        fill_circle(g, cx, cy, rr, argb(col, a * glow * 0.016));
+    if glow > 0.01 {
+        GdipSetInterpolationMode(g, 3);
+        image_tint(
+            g,
+            IMG_GLOW,
+            cx - 120.0,
+            cy - 120.0,
+            240.0,
+            240.0,
+            240.0,
+            a * glow * 0.26,
+            col,
+        );
+        GdipSetInterpolationMode(g, 7);
     }
     // ripples while waiting / connected
     let ph = UI.phase as f32;
@@ -932,45 +1216,37 @@ unsafe fn draw_hero(g: H, a: f32) {
         stroke_circle(g, cx, cy, r + 7.0, argb(col, 0.28 * UI.a_conn * a), 2.0);
     }
     if UI.a_start > 0.004 {
-        let p = pen(argb(col, 0.95 * UI.a_start * a), 2.6);
-        GdipDrawArc(
-            g,
-            p,
-            cx - r - 8.0,
-            cy - r - 8.0,
-            (r + 8.0) * 2.0,
-            (r + 8.0) * 2.0,
-            ph * 420.0,
-            95.0,
-        );
-        GdipDeletePen(p);
-        stroke_circle(g, cx, cy, r + 8.0, argb(col, 0.14 * UI.a_start * a), 2.0);
+        spinner(g, cx, cy, r + 8.0, col, UI.a_start * a, ph);
     }
     // disk + glyph
     fill_circle(g, cx, cy, r, argb(mix(pc(P_INPUT), col, 0.13), a));
     stroke_circle(g, cx, cy, r - 1.0, argb(col, 0.55 * a), 1.6);
     let k = 1.0 + 0.035 * ((ph * 2.2).sin()) * UI.a_conn;
     glyph(g, cx, cy, k, argb(col, a));
-    GdipResetClip(g);
+    GdipRestoreGraphics(g, saved);
     GdipDeletePath(clip);
     // status text with cross-fade
     let f = ease_out(UI.status_fade);
-    if f < 1.0 {
-        draw_status_block(g, UI.prev_status, a * (1.0 - f), -8.0 * f);
+    // The old text leaves before the new one arrives, so the two never overlap.
+    if f < 0.5 {
+        let (t, h) = (&UI.prev_text.0, &UI.prev_text.1);
+        draw_status_block(g, t, h, a * (1.0 - f * 2.0), -8.0 * f);
     }
-    draw_status_block(g, UI.status, a * f, 8.0 * (1.0 - f));
+    let (title, hint) = status_text(UI.status);
+    let fin = ((f - 0.3) / 0.7).clamp(0.0, 1.0);
+    draw_status_block(g, &title, &hint, a * fin, 8.0 * (1.0 - f));
 }
 unsafe fn draw_field(g: H, a: f32) {
     let (x, y, w, h) = FIELD;
     text(
         g,
-        "Имя устройства в AirPlay",
+        tr(Str::FieldLabel),
         x + 4.0,
         316.0,
         300.0,
         18.0,
         F_SMALL,
-        argb(pc(SEC), a),
+        argb(pc(SEC), a * lfade()),
         FMT_L,
     );
     let f = UI.field;
@@ -1054,24 +1330,24 @@ unsafe fn draw_button(g: H, a: f32) {
     GdipDeletePen(p);
     text(
         g,
-        "Включить AirPlay",
+        tr(Str::Start),
         x,
         y + 14.0,
         w,
         24.0,
         F_BTN,
-        argb(0xFFFFFF, a * (1.0 - run)),
+        argb(0xFFFFFF, a * (1.0 - run) * lfade()),
         FMT_C,
     );
     text(
         g,
-        "Остановить приём",
+        tr(Str::Stop),
         x,
         y + 14.0,
         w,
         24.0,
         F_BTN,
-        argb(pc(TEXT), a * run),
+        argb(pc(TEXT), a * run * lfade()),
         FMT_C,
     );
     GdipRestoreGraphics(g, st);
@@ -1089,9 +1365,10 @@ unsafe fn draw_button(g: H, a: f32) {
     }
 }
 unsafe fn draw_steps(g: H, a: f32) {
+    let a = a * lfade();
     text(
         g,
-        "Как подключиться",
+        tr(Str::StepsTitle),
         24.0,
         478.0,
         300.0,
@@ -1100,17 +1377,14 @@ unsafe fn draw_steps(g: H, a: f32) {
         argb(pc(TEXT), a),
         FMT_L,
     );
-    let rows = [
-        ("1", "Откройте «Повтор экрана» в Пункте управления", 506.0),
-        ("2", "Выберите устройство — имя указано выше", 538.0),
-    ];
+    let rows = [("1", tr(Str::Step1), 506.0), ("2", tr(Str::Step2), 538.0)];
     for (n, t, y) in rows {
         fill_circle(g, 35.0, y + 11.0, 11.0, argb(pc(ACC_TXT), a * 0.13));
         text(
             g,
             n,
             24.0,
-            y + 3.5,
+            y + 4.5,
             22.0,
             18.0,
             F_BADGE,
@@ -1130,11 +1404,40 @@ unsafe fn draw_steps(g: H, a: f32) {
         );
     }
 }
+unsafe fn footer_icon(g: H, kind: usize, x: f32, y: f32, color: u32) {
+    let p = pen(color, 1.5);
+    match kind {
+        0 => {
+            // monitor
+            let path = rr_path(x + 1.0, y + 1.5, 14.0, 9.5, 2.2);
+            GdipDrawPath(g, p, path);
+            GdipDeletePath(path);
+            GdipDrawLine(g, p, x + 8.0, y + 11.0, x + 8.0, y + 13.6);
+            GdipDrawLine(g, p, x + 5.0, y + 14.2, x + 11.0, y + 14.2);
+        }
+        1 => {
+            // wi-fi: three arcs and a dot
+            let (cx, cy) = (x + 8.0, y + 13.0);
+            for r in [10.8f32, 7.0, 3.3] {
+                GdipDrawArc(g, p, cx - r, cy - r, r * 2.0, r * 2.0, 227.0, 86.0);
+            }
+            fill_circle(g, cx, cy + 0.2, 1.3, color);
+        }
+        _ => {
+            // clock
+            GdipDrawEllipse(g, p, x + 1.0, y + 1.0, 14.0, 14.0);
+            GdipDrawLine(g, p, x + 8.0, y + 8.0, x + 8.0, y + 4.2);
+            GdipDrawLine(g, p, x + 8.0, y + 8.0, x + 11.0, y + 9.8);
+        }
+    }
+    GdipDeletePen(p);
+}
 unsafe fn draw_footer(g: H, a: f32) {
     let p = pen(argb(pc(BORDER), a), 1.0);
     GdipDrawLine(g, p, 24.0, 580.0, WIN_W - 24.0, 580.0);
     GdipDeletePen(p);
-    let items = ["Экран и звук", "Локально", "до 60 FPS"];
+    let at = a * lfade();
+    let items = [tr(Str::FeatScreen), tr(Str::FeatLocal), tr(Str::FeatFps)];
     let mut widths = [0.0f32; 3];
     let mut total = 0.0;
     for i in 0..3 {
@@ -1145,17 +1448,7 @@ unsafe fn draw_footer(g: H, a: f32) {
     total += gap * 2.0;
     let mut x = (WIN_W - total) / 2.0;
     for i in 0..3 {
-        image(
-            g,
-            IMG_LIGHT[i],
-            x,
-            593.0,
-            16.0,
-            16.0,
-            32.0,
-            a * (1.0 - UI.dark),
-        );
-        image(g, IMG_DARK[i], x, 593.0, 16.0, 16.0, 32.0, a * UI.dark);
+        footer_icon(g, i, x, 590.5, argb(pc(TER), a));
         text(
             g,
             items[i],
@@ -1164,48 +1457,128 @@ unsafe fn draw_footer(g: H, a: f32) {
             widths[i] + 8.0,
             20.0,
             F_SMALL,
-            argb(pc(TER), a),
+            argb(pc(TER), at),
             FMT_L,
         );
         x += 22.0 + widths[i] + gap;
     }
+    draw_lang(g, a);
 }
-unsafe fn render(g: H) {
+unsafe fn seg_at(px: f32, py: f32) -> i32 {
+    if !over(SEG, px, py) {
+        return -1;
+    }
+    (((px - SEG.0) / (SEG.2 / 3.0)) as i32).clamp(0, 2)
+}
+// Segmented language switch with a sliding thumb.
+unsafe fn draw_lang(g: H, a: f32) {
+    let (x, y, w, h) = SEG;
+    let sw = (w - 4.0) / 3.0;
+    fill_rr(
+        g,
+        x,
+        y,
+        w,
+        h,
+        h / 2.0,
+        argb(mix(0xE4E4EA, 0x2C2C2E, UI.dark), a),
+    );
+    let tx = x + 2.0 + UI.lang_pos * sw;
+    fill_rr(
+        g,
+        tx,
+        y + 3.0,
+        sw,
+        h - 4.0,
+        (h - 4.0) / 2.0,
+        argb(0x000000, a * 0.07 * (1.0 - UI.dark)),
+    );
+    fill_rr(
+        g,
+        tx,
+        y + 2.0,
+        sw,
+        h - 4.0,
+        (h - 4.0) / 2.0,
+        argb(mix(0xFFFFFF, 0x5A5A5F, UI.dark), a),
+    );
+    for (i, name) in LANG_NAMES.iter().enumerate() {
+        let near = (1.0 - (UI.lang_pos - i as f32).abs()).clamp(0.0, 1.0);
+        let col = mix(pc(SEC), pc(TEXT), near);
+        text(
+            g,
+            name,
+            x + 2.0 + i as f32 * sw,
+            y + 6.5,
+            sw,
+            18.0,
+            F_BADGE,
+            argb(col, a),
+            FMT_C,
+        );
+    }
+    if UI.kbd && UI.focus == 3 {
+        stroke_rr(
+            g,
+            x - 3.0,
+            y - 3.0,
+            w + 6.0,
+            h + 6.0,
+            h / 2.0 + 3.0,
+            argb(pc(ACC_TXT), a * 0.7),
+            2.0,
+        );
+    }
+}
+unsafe fn render(g: H, clip: Option<(f32, f32, f32, f32)>) {
     GdipSetSmoothingMode(g, 4);
-    GdipSetTextRenderingHint(g, 4);
+    GdipSetTextRenderingHint(g, 5);
     GdipSetInterpolationMode(g, 7);
     GdipSetPixelOffsetMode(g, 2);
-    GdipGraphicsClear(g, argb(pc(BG), 1.0));
+    PARTIAL = clip.is_some();
+    if let Some(c) = clip {
+        let s = UI.s;
+        GdipSetClipRect(g, c.0 * s, c.1 * s, c.2 * s, c.3 * s, 0);
+    }
+    let mut bg = null_mut();
+    GdipCreateSolidFill(argb(pc(BG), 1.0), &mut bg);
+    GdipFillRectangle(g, bg, 0.0, 0.0, BB_W as f32, BB_H as f32);
+    GdipDeleteBrush(bg);
     GdipScaleWorldTransform(g, UI.s, UI.s, 0);
-    let (a, st) = sec(g, 0);
-    image(g, IMG_HEAD, 24.0, 24.0, 48.0, 48.0, 96.0, a);
-    text(
-        g,
-        "Aireluma",
-        84.0,
-        22.0,
-        200.0,
-        30.0,
-        F_TITLE,
-        argb(pc(TEXT), a),
-        FMT_L,
-    );
-    text(
-        g,
-        "Повтор экрана с iOS",
-        85.0,
-        52.0,
-        200.0,
-        18.0,
-        F_BODY,
-        argb(pc(SEC), a),
-        FMT_L,
-    );
-    draw_toggle(g, a);
-    GdipRestoreGraphics(g, st);
+    if clip.is_none() {
+        let (a, st) = sec(g, 0);
+        image(g, IMG_HEAD, 20.0, 24.0, 48.0, 48.0, 96.0, a);
+        text(
+            g,
+            "Aireluma",
+            80.0,
+            22.0,
+            200.0,
+            30.0,
+            F_TITLE,
+            argb(pc(TEXT), a),
+            FMT_L,
+        );
+        text(
+            g,
+            tr(Str::Subtitle),
+            81.0,
+            52.0,
+            220.0,
+            18.0,
+            F_BODY,
+            argb(pc(SEC), a * lfade()),
+            FMT_L,
+        );
+        draw_toggle(g, a);
+        GdipRestoreGraphics(g, st);
+    }
     let (a, st) = sec(g, 1);
     draw_hero(g, a);
     GdipRestoreGraphics(g, st);
+    if clip.is_some() {
+        return;
+    }
     let (a, st) = sec(g, 2);
     draw_field(g, a);
     GdipRestoreGraphics(g, st);
@@ -1230,6 +1603,7 @@ unsafe fn paint(h: H) {
     };
     GetClientRect(h, &mut rc);
     let (w, hh) = (rc.right.max(1), rc.bottom.max(1));
+    let mut fresh = false;
     if BB_DC.is_null() || BB_W != w || BB_H != hh {
         if !BB_BMP.is_null() {
             DeleteObject(BB_BMP);
@@ -1237,16 +1611,50 @@ unsafe fn paint(h: H) {
         if BB_DC.is_null() {
             BB_DC = CreateCompatibleDC(dc);
         }
-        BB_BMP = CreateCompatibleBitmap(dc, w, hh);
+        let bmi = BmiHeader {
+            size: std::mem::size_of::<BmiHeader>() as u32,
+            width: w,
+            height: -hh,
+            planes: 1,
+            bpp: 32,
+            compression: 0,
+            size_image: 0,
+            xppm: 0,
+            yppm: 0,
+            used: 0,
+            important: 0,
+        };
+        let mut bits = null_mut();
+        BB_BMP = CreateDIBSection(dc, &bmi, 0, &mut bits, null_mut(), 0);
         SelectObject(BB_DC, BB_BMP);
         BB_W = w;
         BB_H = hh;
+        fresh = true;
     }
+    // Only the indicator region is redrawn while nothing else is animating.
+    let r = ps.rect;
+    let (a, s) = (AMBIENT, UI.s);
+    let partial = UI.partial
+        && !fresh
+        && r.left >= (a.0 * s).floor() as i32
+        && r.top >= (a.1 * s).floor() as i32
+        && r.right <= ((a.0 + a.2) * s).ceil() as i32
+        && r.bottom <= ((a.1 + a.3) * s).ceil() as i32;
     let mut g = null_mut();
     GdipCreateFromHDC(BB_DC, &mut g);
-    render(g);
+    render(g, if partial { Some(AMBIENT) } else { None });
     GdipDeleteGraphics(g);
-    BitBlt(dc, 0, 0, w, hh, BB_DC, 0, 0, 0x00CC0020);
+    BitBlt(
+        dc,
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top,
+        BB_DC,
+        r.left,
+        r.top,
+        0x00CC0020,
+    );
     EndPaint(h, &ps);
 }
 
@@ -1255,6 +1663,7 @@ unsafe fn kick(h: H) {
     if !UI.timer {
         UI.timer = true;
         UI.last = GetTickCount64();
+        UI.interval = 16;
         SetTimer(h, 2, 16, null_mut());
     }
 }
@@ -1296,6 +1705,11 @@ unsafe fn tick(h: H) {
     );
     moving |= approach(&mut UI.field, hv(edit_focused()), dt, 14.0);
     moving |= approach(&mut UI.running, hv(CHILD.is_some()), dt, 9.0);
+    moving |= approach(&mut UI.lang_pos, UI.lang_t, dt, 14.0);
+    if UI.lang_fade < 1.0 {
+        UI.lang_fade = (UI.lang_fade + dt / 0.3).min(1.0);
+        moving = true;
+    }
     let st = UI.status;
     moving |= approach(&mut UI.a_start, hv(st == Status::Starting), dt, 7.0);
     moving |= approach(&mut UI.a_wait, hv(st == Status::Waiting), dt, 7.0);
@@ -1312,13 +1726,36 @@ unsafe fn tick(h: H) {
         InvalidateRect(INPUT, null(), 1);
     }
     let visible = IsWindowVisible(h) != 0 && IsIconic(h) == 0;
+    UI.partial = visible && !moving && continuous;
     if visible {
-        InvalidateRect(h, null(), 0);
+        if UI.partial {
+            let (a, s) = (AMBIENT, UI.s);
+            let dirty = Rect {
+                left: (a.0 * s).floor() as i32,
+                top: (a.1 * s).floor() as i32,
+                right: ((a.0 + a.2) * s).ceil() as i32,
+                bottom: ((a.1 + a.3) * s).ceil() as i32,
+            };
+            InvalidateRect(h, &dirty, 0);
+        } else {
+            InvalidateRect(h, null(), 0);
+        }
         UpdateWindow(h);
     }
     if !visible || !(moving || continuous) {
         KillTimer(h, 2);
         UI.timer = false;
+    } else {
+        // Ambient animation only needs half the frame rate.
+        let want = if UI.partial && UI.a_start < 0.01 {
+            33
+        } else {
+            16
+        };
+        if UI.interval != want {
+            UI.interval = want;
+            SetTimer(h, 2, want, null_mut());
+        }
     }
 }
 static mut EDIT_HAS_FOCUS: bool = false;
@@ -1422,8 +1859,8 @@ unsafe fn receiver_toggle(h: H) {
             Err(e) => {
                 MessageBoxW(
                     h,
-                    wide(&format!("Не удалось запустить приёмник: {e}")).as_ptr(),
-                    wide("Ошибка").as_ptr(),
+                    wide(&tr(Str::ErrText).replace("{}", &e.to_string())).as_ptr(),
+                    wide(tr(Str::ErrTitle)).as_ptr(),
                     0x10,
                 );
             }
@@ -1432,9 +1869,9 @@ unsafe fn receiver_toggle(h: H) {
 }
 unsafe fn cycle_focus(h: H, back: bool) {
     let order: Vec<i32> = if CHILD.is_some() {
-        vec![1, 2]
+        vec![1, 2, 3]
     } else {
-        vec![0, 1, 2]
+        vec![0, 1, 2, 3]
     };
     let cur = order.iter().position(|v| *v == UI.focus).unwrap_or(0) as i32;
     let n = order.len() as i32;
@@ -1508,7 +1945,7 @@ unsafe fn tray(h: H, operation: u32) -> bool {
     n.flags = 1 | 2 | 4;
     n.callback = 0x8001;
     n.icon = ICON;
-    let tip = wide("Aireluma — приём экрана iPhone");
+    let tip = wide(tr(Str::TrayTip));
     n.tip[..tip.len()].copy_from_slice(&tip);
     Shell_NotifyIconW(operation, &mut n) != 0
 }
@@ -1521,7 +1958,7 @@ unsafe extern "system" fn brand_video(window: H, data: isize) -> i32 {
     GetWindowThreadProcessId(window, &mut pid);
     if pid == data as u32 && IsWindowVisible(window) != 0 && VIDEO_WINDOW != window {
         let mut result = 0;
-        let title = wide("Aireluma — экран iPhone");
+        let title = wide(tr(Str::VideoTitle));
         if SendMessageTimeoutW(
             window,
             0x0c,
@@ -1603,6 +2040,7 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             let py = ((l >> 16) & 0xffff) as i16 as f32 / UI.s;
             UI.over_btn = over(BTN, px, py);
             UI.over_tog = over(TOG, px, py);
+            UI.over_seg = seg_at(px, py);
             if !UI.tracking {
                 let mut t = TrackMouse {
                     size: std::mem::size_of::<TrackMouse>() as u32,
@@ -1620,11 +2058,12 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             UI.tracking = false;
             UI.over_btn = false;
             UI.over_tog = false;
+            UI.over_seg = -1;
             kick(h);
             0
         }
         0x20 => {
-            if (l & 0xffff) == 1 && (UI.over_btn || UI.over_tog) {
+            if (l & 0xffff) == 1 && (UI.over_btn || UI.over_tog || UI.over_seg >= 0) {
                 SetCursor(LoadCursorW(null_mut(), 32649usize as *const u16));
                 1
             } else {
@@ -1638,6 +2077,7 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             let py = ((l >> 16) & 0xffff) as i16 as f32 / UI.s;
             UI.over_btn = over(BTN, px, py);
             UI.over_tog = over(TOG, px, py);
+            UI.over_seg = seg_at(px, py);
             if UI.over_btn {
                 UI.press_item = 1;
                 UI.focus = 1;
@@ -1645,6 +2085,10 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             } else if UI.over_tog {
                 UI.press_item = 2;
                 UI.focus = 2;
+                SetCapture(h);
+            } else if UI.over_seg >= 0 {
+                UI.press_item = 3;
+                UI.focus = 3;
                 SetCapture(h);
             }
             kick(h);
@@ -1658,21 +2102,28 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             let py = ((l >> 16) & 0xffff) as i16 as f32 / UI.s;
             UI.over_btn = over(BTN, px, py);
             UI.over_tog = over(TOG, px, py);
+            UI.over_seg = seg_at(px, py);
             if item == 1 && UI.over_btn {
                 receiver_toggle(h);
             } else if item == 2 && UI.over_tog {
                 theme_toggle(h);
+            } else if item == 3 && UI.over_seg >= 0 {
+                set_lang(h, LANGS[UI.over_seg as usize]);
             }
             kick(h);
             0
         }
         0x100 => {
             let repeat = (l >> 30) & 1 != 0;
-            if !repeat && (w == 0x20 || w == 0x0d) {
-                if UI.focus == 2 {
-                    theme_toggle(h);
-                } else {
-                    receiver_toggle(h);
+            if !repeat && UI.focus == 3 && (w == 0x25 || w == 0x27) {
+                let i = (LANG as i32 + if w == 0x25 { -1 } else { 1 }).clamp(0, 2);
+                set_lang(h, LANGS[i as usize]);
+                UI.kbd = true;
+            } else if !repeat && (w == 0x20 || w == 0x0d) {
+                match UI.focus {
+                    2 => theme_toggle(h),
+                    3 => {}
+                    _ => receiver_toggle(h),
                 }
                 UI.kbd = true;
             }
@@ -1732,9 +2183,9 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
                     let mut pt = Point { x: 0, y: 0 };
                     GetCursorPos(&mut pt);
                     let menu = CreatePopupMenu();
-                    AppendMenuW(menu, 0, 101, wide("Открыть Aireluma").as_ptr());
+                    AppendMenuW(menu, 0, 101, wide(tr(Str::TrayOpen)).as_ptr());
                     AppendMenuW(menu, 0x800, 0, null());
-                    AppendMenuW(menu, 0, 102, wide("Выйти").as_ptr());
+                    AppendMenuW(menu, 0, 102, wide(tr(Str::TrayExit)).as_ptr());
                     SetForegroundWindow(h);
                     TrackPopupMenu(menu, 0x2, pt.x, pt.y, 0, h, null_mut());
                     DestroyMenu(menu);
@@ -1814,6 +2265,9 @@ pub fn run() {
         DARK = fs::read_to_string(appearance_path())
             .map(|v| v.trim() == "dark")
             .unwrap_or(false);
+        LANG = load_lang();
+        UI.lang_pos = LANG as i32 as f32;
+        UI.lang_t = UI.lang_pos;
         UI.dark = if DARK { 1.0 } else { 0.0 };
         UI.dark_t = UI.dark;
         init_gdip();
