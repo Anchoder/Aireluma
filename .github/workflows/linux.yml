@@ -16,6 +16,8 @@ jobs:
         run: GTK_A11Y=none GSK_RENDERER=cairo xvfb-run -a target/release/airplay-windows --smoke-test
       - name: Check startup AirPlay announcements
         run: python3 tests/mdns-announcements.py engine/uxplay/build/uxplay
+      - name: Check video and photo transitions
+        run: python3 tests/video-transitions.py
       - name: Check package contents
         run: dpkg-deb --info artifacts/*.deb && dpkg-deb --contents artifacts/*.deb
       - name: Install and remove the package

@@ -168,6 +168,102 @@ index 97a1ba6..56b1682 100644
      THREAD_CREATE(mdnsd->thread, mdns_thread, mdnsd);
      if (!mdnsd->thread) {
          if (mdnsd->sock_fd4 != -1) {
+diff --git a/lib/raop_rtp_mirror.c b/lib/raop_rtp_mirror.c
+index 648ee01..90a39b3 100644
+--- a/lib/raop_rtp_mirror.c
++++ b/lib/raop_rtp_mirror.c
+@@ -548,6 +548,10 @@ raop_rtp_mirror_thread(void *arg)
+                     sps_pps_len = 0;
+                 }
+ 
++                if (valid_data && video_stream_suspended) {
++                    raop_rtp_mirror->callbacks.video_resume(raop_rtp_mirror->callbacks.cls);
++                    video_stream_suspended = false;
++                }
+                 raop_rtp_mirror->callbacks.video_process(raop_rtp_mirror->callbacks.cls, raop_rtp_mirror->ntp, &video_data);
+                 free(payload_out);
+                 break;
+@@ -616,7 +620,8 @@ raop_rtp_mirror_thread(void *arg)
+ 
+                 if (!memcmp(payload + 4, hvc1, 4)) {
+                     /* hvc1 HECV detected */
+-                    if (codec == VIDEO_CODEC_UNKNOWN) {
++                    if (codec != VIDEO_CODEC_H265) {
++                        sps_pps_len = 0;
+                         codec = VIDEO_CODEC_H265;
+                         h265_video = true;
+                         if (raop_rtp_mirror->callbacks.video_set_codec_and_size(raop_rtp_mirror->callbacks.cls, codec,
+@@ -628,11 +633,6 @@ raop_rtp_mirror_thread(void *arg)
+                             conn_reset = true;
+                             break;
+                         }
+-                    } else if (codec != VIDEO_CODEC_H265) {
+-                        logger_log(raop_rtp_mirror->logger, LOGGER_ERR, "invalid video codec change to H265: codec was set previously");
+-                        /* drop connection */
+-                        conn_reset = true;
+-                        break;
+                     }
+                     unsigned char vps_start_code[] = { 0xa0, 0x00, 0x01, 0x00 };
+                     unsigned char sps_start_code[] = { 0xa1, 0x00, 0x01, 0x00 };
+@@ -705,7 +705,8 @@ raop_rtp_mirror_thread(void *arg)
+ 			   
+                     memcpy(ptr, pps, pps_size);
+                 } else {
+-                    if (codec == VIDEO_CODEC_UNKNOWN) {
++                    if (codec != VIDEO_CODEC_H264) {
++                        sps_pps_len = 0;
+                         codec = VIDEO_CODEC_H264;
+                         h265_video = false;
+                         if (raop_rtp_mirror->callbacks.video_set_codec_and_size(raop_rtp_mirror->callbacks.cls, codec,
+@@ -717,11 +718,6 @@ raop_rtp_mirror_thread(void *arg)
+                             conn_reset = true;
+                             break;
+                         }
+-                    } else if (codec != VIDEO_CODEC_H264) {
+-                        logger_log(raop_rtp_mirror->logger, LOGGER_ERR, "invalid codec change to H264: codec was set previously");
+-                        /* drop connection */
+-                        conn_reset = true;
+-                        break;
+                     }
+                     short sps_size = byteutils_get_short_be(payload,6);
+                     unsigned char *sequence_parameter_set = payload + 8;
+diff --git a/renderers/video_renderer.c b/renderers/video_renderer.c
+index b6c1f1c..f9a0c44 100644
+--- a/renderers/video_renderer.c
++++ b/renderers/video_renderer.c
+@@ -1095,9 +1095,13 @@ int video_renderer_choose_codec_and_size (bool video_is_jpeg, bool video_is_h265
+     } else if (renderer_used == renderer) {
+         return 0;
+     } else if (renderer) {
+-        return -1;
++        gst_element_set_state(renderer->pipeline, GST_STATE_NULL);
++        if (gst_element_get_state(renderer->pipeline, NULL, NULL, GST_SECOND) == GST_STATE_CHANGE_FAILURE) {
++            return -1;
++        }
+     }
+     renderer = renderer_used;
++    first_packet = true;
+ 
+     // code moved here from video_renderer_start
+     GstState state;
+@@ -1116,17 +1120,6 @@ int video_renderer_choose_codec_and_size (bool video_is_jpeg, bool video_is_h265
+                gst_element_state_get_name (old_state),gst_element_state_get_name (new_state));
+     gst_video_pipeline_base_time = gst_element_get_base_time(renderer->appsrc);
+ 
+-    /* destroy unused renderers */
+-    for (int i = 0; i < n_renderers; i++) {
+-        if (renderer_type[i] == renderer) {
+-            continue;
+-        }
+-        if (renderer_type[i]) {
+-            video_renderer_t *renderer_unused = renderer_type[i];
+-            renderer_type[i] = NULL;
+-            video_renderer_destroy_instance(renderer_unused);
+-        }
+-    }
+     return 0;
+ }
+     
 diff --git a/uxplay.cpp b/uxplay.cpp
 index 5ad4e39..9dbbe75 100644
 --- a/uxplay.cpp
