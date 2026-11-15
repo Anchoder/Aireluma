@@ -462,8 +462,6 @@ static mut FMT_C: H = null_mut();
 static mut FMT_R: H = null_mut();
 static mut FMT_W: H = null_mut();
 static mut IMG_HEAD: H = null_mut();
-static mut IMG_LIGHT: [H; 3] = [null_mut(); 3];
-static mut IMG_DARK: [H; 3] = [null_mut(); 3];
 
 fn wide(s: &str) -> Vec<u16> {
     OsStr::new(s).encode_wide().chain(Some(0)).collect()
@@ -684,10 +682,6 @@ unsafe fn init_gdip() {
         bmp
     };
     IMG_HEAD = load(1, 96);
-    for i in 0..3 {
-        IMG_DARK[i] = load(i + 2, 32);
-        IMG_LIGHT[i] = load(i + 5, 32);
-    }
 }
 
 // ───────────────────────────── Status text ─────────────────────────────
@@ -1130,6 +1124,34 @@ unsafe fn draw_steps(g: H, a: f32) {
         );
     }
 }
+unsafe fn footer_icon(g: H, kind: usize, x: f32, y: f32, color: u32) {
+    let p = pen(color, 1.5);
+    match kind {
+        0 => {
+            // monitor
+            let path = rr_path(x + 1.0, y + 1.5, 14.0, 9.5, 2.2);
+            GdipDrawPath(g, p, path);
+            GdipDeletePath(path);
+            GdipDrawLine(g, p, x + 8.0, y + 11.0, x + 8.0, y + 13.6);
+            GdipDrawLine(g, p, x + 5.0, y + 14.2, x + 11.0, y + 14.2);
+        }
+        1 => {
+            // wi-fi: three arcs and a dot
+            let (cx, cy) = (x + 8.0, y + 13.0);
+            for r in [10.8f32, 7.0, 3.3] {
+                GdipDrawArc(g, p, cx - r, cy - r, r * 2.0, r * 2.0, 227.0, 86.0);
+            }
+            fill_circle(g, cx, cy + 0.2, 1.3, color);
+        }
+        _ => {
+            // clock
+            GdipDrawEllipse(g, p, x + 1.0, y + 1.0, 14.0, 14.0);
+            GdipDrawLine(g, p, x + 8.0, y + 8.0, x + 8.0, y + 4.2);
+            GdipDrawLine(g, p, x + 8.0, y + 8.0, x + 11.0, y + 9.8);
+        }
+    }
+    GdipDeletePen(p);
+}
 unsafe fn draw_footer(g: H, a: f32) {
     let p = pen(argb(pc(BORDER), a), 1.0);
     GdipDrawLine(g, p, 24.0, 580.0, WIN_W - 24.0, 580.0);
@@ -1145,17 +1167,7 @@ unsafe fn draw_footer(g: H, a: f32) {
     total += gap * 2.0;
     let mut x = (WIN_W - total) / 2.0;
     for i in 0..3 {
-        image(
-            g,
-            IMG_LIGHT[i],
-            x,
-            593.0,
-            16.0,
-            16.0,
-            32.0,
-            a * (1.0 - UI.dark),
-        );
-        image(g, IMG_DARK[i], x, 593.0, 16.0, 16.0, 32.0, a * UI.dark);
+        footer_icon(g, i, x, 590.5, argb(pc(TER), a));
         text(
             g,
             items[i],
