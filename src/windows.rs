@@ -1227,12 +1227,14 @@ unsafe fn draw_hero(g: H, a: f32) {
     GdipDeletePath(clip);
     // status text with cross-fade
     let f = ease_out(UI.status_fade);
-    if f < 1.0 {
+    // The old text leaves before the new one arrives, so the two never overlap.
+    if f < 0.5 {
         let (t, h) = (&UI.prev_text.0, &UI.prev_text.1);
-        draw_status_block(g, t, h, a * (1.0 - f), -8.0 * f);
+        draw_status_block(g, t, h, a * (1.0 - f * 2.0), -8.0 * f);
     }
     let (title, hint) = status_text(UI.status);
-    draw_status_block(g, &title, &hint, a * f, 8.0 * (1.0 - f));
+    let fin = ((f - 0.3) / 0.7).clamp(0.0, 1.0);
+    draw_status_block(g, &title, &hint, a * fin, 8.0 * (1.0 - f));
 }
 unsafe fn draw_field(g: H, a: f32) {
     let (x, y, w, h) = FIELD;
