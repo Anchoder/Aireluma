@@ -222,6 +222,7 @@ extern "system" {
 extern "system" {
     fn GetModuleHandleW(name: *const u16) -> H;
     fn GetTickCount64() -> u64;
+    fn GetUserDefaultUILanguage() -> u16;
 }
 #[link(name = "gdi32")]
 extern "system" {
@@ -415,7 +416,11 @@ struct Ui {
     interval: u32,
     partial: bool,
     status: Status,
-    prev_status: Status,
+    prev_text: (String, String),
+    lang_pos: f32,
+    lang_t: f32,
+    lang_fade: f32,
+    over_seg: i32,
     status_fade: f32,
     over_btn: bool,
     over_tog: bool,
@@ -447,7 +452,11 @@ static mut UI: Ui = Ui {
     interval: 16,
     partial: false,
     status: Status::Off,
-    prev_status: Status::Off,
+    prev_text: (String::new(), String::new()),
+    lang_pos: 0.0,
+    lang_t: 0.0,
+    lang_fade: 1.0,
+    over_seg: -1,
     status_fade: 1.0,
     over_btn: false,
     over_tog: false,
@@ -461,11 +470,12 @@ static mut UI: Ui = Ui {
 };
 
 const WIN_W: f32 = 380.0;
-const WIN_H: f32 = 620.0;
+const WIN_H: f32 = 668.0;
 const BTN: (f32, f32, f32, f32) = (20.0, 404.0, 340.0, 52.0);
 const TOG: (f32, f32, f32, f32) = (304.0, 33.0, 56.0, 32.0);
 // Region around the status indicator that changes while the receiver is running.
 const AMBIENT: (f32, f32, f32, f32) = (114.0, 92.0, 152.0, 144.0);
+const SEG: (f32, f32, f32, f32) = (82.0, 628.0, 216.0, 28.0);
 const FIELD: (f32, f32, f32, f32) = (20.0, 340.0, 340.0, 48.0);
 
 static mut DARK: bool = false;
@@ -712,17 +722,11 @@ unsafe fn init_gdip() {
     FMT_C = format(1, false);
     FMT_R = format(2, false);
     FMT_W = format(1, true);
-    let inst = GetModuleHandleW(null());
-    let load = |id: usize, size: i32| -> H {
-        let icon = LoadImageW(inst, id as *const u16, 1, size, size, 0);
-        let mut bmp = null_mut();
-        if !icon.is_null() {
-            GdipCreateBitmapFromHICON(icon, &mut bmp);
-            DestroyIcon(icon);
-        }
-        bmp
-    };
-    IMG_HEAD = load(1, 96);
+    let icon = LoadImageW(GetModuleHandleW(null()), 1usize as *const u16, 1, 96, 96, 0);
+    if !icon.is_null() {
+        GdipCreateBitmapFromHICON(icon, &mut IMG_HEAD);
+        DestroyIcon(icon);
+    }
     // Radial falloff mask for the ambient glow, tinted at draw time.
     let n = 240usize;
     let mut px = vec![0u32; n * n];
@@ -745,45 +749,224 @@ unsafe fn init_gdip() {
     );
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum Lang {
+    Ru = 0,
+    En = 1,
+    De = 2,
+}
+const LANGS: [Lang; 3] = [Lang::Ru, Lang::En, Lang::De];
+const LANG_NAMES: [&str; 3] = ["Русский", "English", "Deutsch"];
+#[derive(Clone, Copy)]
+enum Str {
+    Subtitle,
+    FieldLabel,
+    Start,
+    Stop,
+    StepsTitle,
+    Step1,
+    Step2,
+    FeatScreen,
+    FeatLocal,
+    FeatFps,
+    OffTitle,
+    OffHint,
+    StartingTitle,
+    StartingHint,
+    WaitTitle,
+    WaitHint,
+    ConnTitle,
+    ConnHint,
+    StoppedTitle,
+    StoppedHint,
+    FailTitle,
+    FailHint,
+    ErrTitle,
+    ErrText,
+    TrayTip,
+    VideoTitle,
+    TrayOpen,
+    TrayExit,
+}
+static mut LANG: Lang = Lang::Ru;
+/// Translation table: Russian, English, German.
+fn tr(k: Str) -> &'static str {
+    let t: [&str; 3] = match k {
+        Str::Subtitle => [
+            "Повтор экрана с iOS",
+            "iOS screen mirroring",
+            "iOS-Bildschirmspiegelung",
+        ],
+        Str::FieldLabel => [
+            "Имя устройства в AirPlay",
+            "Device name in AirPlay",
+            "Gerätename in AirPlay",
+        ],
+        Str::Start => ["Включить AirPlay", "Start AirPlay", "AirPlay starten"],
+        Str::Stop => ["Остановить приём", "Stop receiving", "Empfang beenden"],
+        Str::StepsTitle => ["Как подключиться", "How to connect", "So verbinden Sie"],
+        Str::Step1 => [
+            "Откройте «Повтор экрана» в Пункте управления",
+            "Open Screen Mirroring in Control Center",
+            "Kontrollzentrum → Bildschirmsynchronisierung",
+        ],
+        Str::Step2 => [
+            "Выберите устройство — имя указано выше",
+            "Pick the device — its name is shown above",
+            "Gerät wählen – der Name steht oben",
+        ],
+        Str::FeatScreen => ["Экран и звук", "Screen & audio", "Bild & Ton"],
+        Str::FeatLocal => ["Локально", "Local network", "Lokal"],
+        Str::FeatFps => ["до 60 FPS", "up to 60 FPS", "bis 60 FPS"],
+        Str::OffTitle => ["Приём выключен", "Receiver off", "Empfang aus"],
+        Str::OffHint => [
+            "Нажмите «{}», чтобы начать",
+            "Click “{}” to begin",
+            "Klicken Sie auf „{}“, um zu beginnen",
+        ],
+        Str::StartingTitle => [
+            "Запуск приёмника…",
+            "Starting receiver…",
+            "Empfänger startet…",
+        ],
+        Str::StartingHint => [
+            "Это займёт пару секунд",
+            "This takes a few seconds",
+            "Das dauert einen Moment",
+        ],
+        Str::WaitTitle => ["Ожидание iPhone", "Waiting for iPhone", "Warte auf iPhone"],
+        Str::WaitHint => [
+            "Откройте «Повтор экрана» в Пункте управления и выберите «{}»",
+            "Open Screen Mirroring in Control Center and choose “{}”",
+            "Kontrollzentrum → Bildschirmsynchronisierung → „{}“",
+        ],
+        Str::ConnTitle => [
+            "Экран подключён",
+            "Screen connected",
+            "Bildschirm verbunden",
+        ],
+        Str::ConnHint => [
+            "Изображение и звук передаются на этот компьютер",
+            "Picture and sound are streaming to this computer",
+            "Bild und Ton werden auf diesen Computer übertragen",
+        ],
+        Str::StoppedTitle => [
+            "Приёмник остановлен",
+            "Receiver stopped",
+            "Empfänger angehalten",
+        ],
+        Str::StoppedHint => [
+            "Нажмите «{}», чтобы запустить снова",
+            "Click “{}” to start again",
+            "Klicken Sie auf „{}“, um neu zu starten",
+        ],
+        Str::FailTitle => [
+            "Не удалось запустить приёмник",
+            "Could not start the receiver",
+            "Empfänger konnte nicht starten",
+        ],
+        Str::FailHint => [
+            "Нажмите «{}», чтобы повторить",
+            "Click “{}” to try again",
+            "Klicken Sie auf „{}“, um es erneut zu versuchen",
+        ],
+        Str::ErrTitle => ["Ошибка", "Error", "Fehler"],
+        Str::ErrText => [
+            "Не удалось запустить приёмник: {}",
+            "Could not start the receiver: {}",
+            "Empfänger konnte nicht gestartet werden: {}",
+        ],
+        Str::TrayTip => [
+            "Aireluma — приём экрана iPhone",
+            "Aireluma — iPhone screen receiver",
+            "Aireluma — iPhone-Bildschirmempfang",
+        ],
+        Str::VideoTitle => [
+            "Aireluma — экран iPhone",
+            "Aireluma — iPhone screen",
+            "Aireluma — iPhone-Bildschirm",
+        ],
+        Str::TrayOpen => ["Открыть Aireluma", "Open Aireluma", "Aireluma öffnen"],
+        Str::TrayExit => ["Выйти", "Quit", "Beenden"],
+    };
+    t[unsafe { LANG } as usize]
+}
+fn language_path() -> PathBuf {
+    PathBuf::from(env::var_os("APPDATA").unwrap_or_default())
+        .join("Aireluma")
+        .join("language")
+}
+/// Saved choice first, then the Windows display language, otherwise English.
+fn load_lang() -> Lang {
+    match fs::read_to_string(language_path())
+        .ok()
+        .as_deref()
+        .map(str::trim)
+    {
+        Some("ru") => Lang::Ru,
+        Some("en") => Lang::En,
+        Some("de") => Lang::De,
+        _ => match unsafe { GetUserDefaultUILanguage() } & 0x3ff {
+            0x19 => Lang::Ru,
+            0x07 => Lang::De,
+            _ => Lang::En,
+        },
+    }
+}
+unsafe fn set_lang(h: H, l: Lang) {
+    if LANG == l {
+        return;
+    }
+    UI.prev_text = status_text(UI.status);
+    LANG = l;
+    UI.status_fade = 0.0;
+    UI.lang_fade = 0.0;
+    UI.lang_t = l as i32 as f32;
+    let path = language_path();
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let _ = fs::write(path, ["ru", "en", "de"][l as usize]);
+    VIDEO_WINDOW = null_mut();
+    if TRAY_READY {
+        tray(h, 1);
+    }
+    kick(h);
+}
+// Localized text fades back in after a language switch.
+unsafe fn lfade() -> f32 {
+    0.2 + 0.8 * ease_out(UI.lang_fade)
+}
+
 // ───────────────────────────── Status text ─────────────────────────────
 fn status_text(s: Status) -> (String, String) {
     unsafe {
+        let start = tr(Str::Start);
         match s {
             Status::Off => (
-                "Приём выключен".into(),
-                "Нажмите «Включить AirPlay», чтобы начать".into(),
+                tr(Str::OffTitle).into(),
+                tr(Str::OffHint).replace("{}", start),
             ),
-            Status::Starting => ("Запуск приёмника…".into(), "Это займёт пару секунд".into()),
+            Status::Starting => (tr(Str::StartingTitle).into(), tr(Str::StartingHint).into()),
             Status::Waiting => (
-                "Ожидание iPhone".into(),
-                format!(
-                    "Откройте «Повтор экрана» в Пункте управления и выберите «{}»",
-                    UI.name
-                ),
+                tr(Str::WaitTitle).into(),
+                tr(Str::WaitHint).replace("{}", &UI.name),
             ),
-            Status::Connected => (
-                "Экран подключён".into(),
-                "Изображение и звук передаются на этот компьютер".into(),
+            Status::Connected => (tr(Str::ConnTitle).into(), tr(Str::ConnHint).into()),
+            Status::Failed if UI.was_ready => (
+                tr(Str::StoppedTitle).into(),
+                tr(Str::StoppedHint).replace("{}", start),
             ),
-            Status::Failed => {
-                if UI.was_ready {
-                    (
-                        "Приёмник остановлен".into(),
-                        "Нажмите «Включить AirPlay», чтобы запустить снова".into(),
-                    )
-                } else {
-                    (
-                        "Не удалось запустить приёмник".into(),
-                        "Нажмите «Включить AirPlay», чтобы повторить".into(),
-                    )
-                }
-            }
+            Status::Failed => (
+                tr(Str::FailTitle).into(),
+                tr(Str::FailHint).replace("{}", start),
+            ),
         }
     }
 }
 unsafe fn set_status(h: H, s: Status) {
     if UI.status != s {
-        UI.prev_status = UI.status;
+        UI.prev_text = status_text(UI.status);
         UI.status = s;
         UI.status_fade = 0.0;
     }
@@ -903,14 +1086,13 @@ unsafe fn draw_toggle(g: H, a: f32) {
         );
     }
 }
-unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
+unsafe fn draw_status_block(g: H, title: &str, hint: &str, a: f32, dy: f32) {
     if a <= 0.01 {
         return;
     }
-    let (title, hint) = status_text(s);
     text(
         g,
-        &title,
+        title,
         20.0,
         209.0 + dy,
         340.0,
@@ -921,7 +1103,7 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
     );
     text(
         g,
-        &hint,
+        hint,
         48.0,
         239.0 + dy,
         284.0,
@@ -1046,21 +1228,23 @@ unsafe fn draw_hero(g: H, a: f32) {
     // status text with cross-fade
     let f = ease_out(UI.status_fade);
     if f < 1.0 {
-        draw_status_block(g, UI.prev_status, a * (1.0 - f), -8.0 * f);
+        let (t, h) = (&UI.prev_text.0, &UI.prev_text.1);
+        draw_status_block(g, t, h, a * (1.0 - f), -8.0 * f);
     }
-    draw_status_block(g, UI.status, a * f, 8.0 * (1.0 - f));
+    let (title, hint) = status_text(UI.status);
+    draw_status_block(g, &title, &hint, a * f, 8.0 * (1.0 - f));
 }
 unsafe fn draw_field(g: H, a: f32) {
     let (x, y, w, h) = FIELD;
     text(
         g,
-        "Имя устройства в AirPlay",
+        tr(Str::FieldLabel),
         x + 4.0,
         316.0,
         300.0,
         18.0,
         F_SMALL,
-        argb(pc(SEC), a),
+        argb(pc(SEC), a * lfade()),
         FMT_L,
     );
     let f = UI.field;
@@ -1144,24 +1328,24 @@ unsafe fn draw_button(g: H, a: f32) {
     GdipDeletePen(p);
     text(
         g,
-        "Включить AirPlay",
+        tr(Str::Start),
         x,
         y + 14.0,
         w,
         24.0,
         F_BTN,
-        argb(0xFFFFFF, a * (1.0 - run)),
+        argb(0xFFFFFF, a * (1.0 - run) * lfade()),
         FMT_C,
     );
     text(
         g,
-        "Остановить приём",
+        tr(Str::Stop),
         x,
         y + 14.0,
         w,
         24.0,
         F_BTN,
-        argb(pc(TEXT), a * run),
+        argb(pc(TEXT), a * run * lfade()),
         FMT_C,
     );
     GdipRestoreGraphics(g, st);
@@ -1179,9 +1363,10 @@ unsafe fn draw_button(g: H, a: f32) {
     }
 }
 unsafe fn draw_steps(g: H, a: f32) {
+    let a = a * lfade();
     text(
         g,
-        "Как подключиться",
+        tr(Str::StepsTitle),
         24.0,
         478.0,
         300.0,
@@ -1190,10 +1375,7 @@ unsafe fn draw_steps(g: H, a: f32) {
         argb(pc(TEXT), a),
         FMT_L,
     );
-    let rows = [
-        ("1", "Откройте «Повтор экрана» в Пункте управления", 506.0),
-        ("2", "Выберите устройство — имя указано выше", 538.0),
-    ];
+    let rows = [("1", tr(Str::Step1), 506.0), ("2", tr(Str::Step2), 538.0)];
     for (n, t, y) in rows {
         fill_circle(g, 35.0, y + 11.0, 11.0, argb(pc(ACC_TXT), a * 0.13));
         text(
@@ -1252,7 +1434,8 @@ unsafe fn draw_footer(g: H, a: f32) {
     let p = pen(argb(pc(BORDER), a), 1.0);
     GdipDrawLine(g, p, 24.0, 580.0, WIN_W - 24.0, 580.0);
     GdipDeletePen(p);
-    let items = ["Экран и звук", "Локально", "до 60 FPS"];
+    let at = a * lfade();
+    let items = [tr(Str::FeatScreen), tr(Str::FeatLocal), tr(Str::FeatFps)];
     let mut widths = [0.0f32; 3];
     let mut total = 0.0;
     for i in 0..3 {
@@ -1272,10 +1455,77 @@ unsafe fn draw_footer(g: H, a: f32) {
             widths[i] + 8.0,
             20.0,
             F_SMALL,
-            argb(pc(TER), a),
+            argb(pc(TER), at),
             FMT_L,
         );
         x += 22.0 + widths[i] + gap;
+    }
+    draw_lang(g, a);
+}
+unsafe fn seg_at(px: f32, py: f32) -> i32 {
+    if !over(SEG, px, py) {
+        return -1;
+    }
+    (((px - SEG.0) / (SEG.2 / 3.0)) as i32).clamp(0, 2)
+}
+// Segmented language switch with a sliding thumb.
+unsafe fn draw_lang(g: H, a: f32) {
+    let (x, y, w, h) = SEG;
+    let sw = (w - 4.0) / 3.0;
+    fill_rr(
+        g,
+        x,
+        y,
+        w,
+        h,
+        h / 2.0,
+        argb(mix(0xE4E4EA, 0x2C2C2E, UI.dark), a),
+    );
+    let tx = x + 2.0 + UI.lang_pos * sw;
+    fill_rr(
+        g,
+        tx,
+        y + 3.0,
+        sw,
+        h - 4.0,
+        (h - 4.0) / 2.0,
+        argb(0x000000, a * 0.07 * (1.0 - UI.dark)),
+    );
+    fill_rr(
+        g,
+        tx,
+        y + 2.0,
+        sw,
+        h - 4.0,
+        (h - 4.0) / 2.0,
+        argb(mix(0xFFFFFF, 0x5A5A5F, UI.dark), a),
+    );
+    for (i, name) in LANG_NAMES.iter().enumerate() {
+        let near = (1.0 - (UI.lang_pos - i as f32).abs()).clamp(0.0, 1.0);
+        let col = mix(pc(SEC), pc(TEXT), near);
+        text(
+            g,
+            name,
+            x + 2.0 + i as f32 * sw,
+            y + 6.5,
+            sw,
+            18.0,
+            F_BADGE,
+            argb(col, a),
+            FMT_C,
+        );
+    }
+    if UI.kbd && UI.focus == 3 {
+        stroke_rr(
+            g,
+            x - 3.0,
+            y - 3.0,
+            w + 6.0,
+            h + 6.0,
+            h / 2.0 + 3.0,
+            argb(pc(ACC_TXT), a * 0.7),
+            2.0,
+        );
     }
 }
 unsafe fn render(g: H, clip: Option<(f32, f32, f32, f32)>) {
@@ -1309,13 +1559,13 @@ unsafe fn render(g: H, clip: Option<(f32, f32, f32, f32)>) {
         );
         text(
             g,
-            "Повтор экрана с iOS",
+            tr(Str::Subtitle),
             81.0,
             52.0,
-            200.0,
+            220.0,
             18.0,
             F_BODY,
-            argb(pc(SEC), a),
+            argb(pc(SEC), a * lfade()),
             FMT_L,
         );
         draw_toggle(g, a);
@@ -1453,6 +1703,11 @@ unsafe fn tick(h: H) {
     );
     moving |= approach(&mut UI.field, hv(edit_focused()), dt, 14.0);
     moving |= approach(&mut UI.running, hv(CHILD.is_some()), dt, 9.0);
+    moving |= approach(&mut UI.lang_pos, UI.lang_t, dt, 14.0);
+    if UI.lang_fade < 1.0 {
+        UI.lang_fade = (UI.lang_fade + dt / 0.3).min(1.0);
+        moving = true;
+    }
     let st = UI.status;
     moving |= approach(&mut UI.a_start, hv(st == Status::Starting), dt, 7.0);
     moving |= approach(&mut UI.a_wait, hv(st == Status::Waiting), dt, 7.0);
@@ -1602,8 +1857,8 @@ unsafe fn receiver_toggle(h: H) {
             Err(e) => {
                 MessageBoxW(
                     h,
-                    wide(&format!("Не удалось запустить приёмник: {e}")).as_ptr(),
-                    wide("Ошибка").as_ptr(),
+                    wide(&tr(Str::ErrText).replace("{}", &e.to_string())).as_ptr(),
+                    wide(tr(Str::ErrTitle)).as_ptr(),
                     0x10,
                 );
             }
@@ -1612,9 +1867,9 @@ unsafe fn receiver_toggle(h: H) {
 }
 unsafe fn cycle_focus(h: H, back: bool) {
     let order: Vec<i32> = if CHILD.is_some() {
-        vec![1, 2]
+        vec![1, 2, 3]
     } else {
-        vec![0, 1, 2]
+        vec![0, 1, 2, 3]
     };
     let cur = order.iter().position(|v| *v == UI.focus).unwrap_or(0) as i32;
     let n = order.len() as i32;
@@ -1688,7 +1943,7 @@ unsafe fn tray(h: H, operation: u32) -> bool {
     n.flags = 1 | 2 | 4;
     n.callback = 0x8001;
     n.icon = ICON;
-    let tip = wide("Aireluma — приём экрана iPhone");
+    let tip = wide(tr(Str::TrayTip));
     n.tip[..tip.len()].copy_from_slice(&tip);
     Shell_NotifyIconW(operation, &mut n) != 0
 }
@@ -1701,7 +1956,7 @@ unsafe extern "system" fn brand_video(window: H, data: isize) -> i32 {
     GetWindowThreadProcessId(window, &mut pid);
     if pid == data as u32 && IsWindowVisible(window) != 0 && VIDEO_WINDOW != window {
         let mut result = 0;
-        let title = wide("Aireluma — экран iPhone");
+        let title = wide(tr(Str::VideoTitle));
         if SendMessageTimeoutW(
             window,
             0x0c,
@@ -1783,6 +2038,7 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             let py = ((l >> 16) & 0xffff) as i16 as f32 / UI.s;
             UI.over_btn = over(BTN, px, py);
             UI.over_tog = over(TOG, px, py);
+            UI.over_seg = seg_at(px, py);
             if !UI.tracking {
                 let mut t = TrackMouse {
                     size: std::mem::size_of::<TrackMouse>() as u32,
@@ -1800,11 +2056,12 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             UI.tracking = false;
             UI.over_btn = false;
             UI.over_tog = false;
+            UI.over_seg = -1;
             kick(h);
             0
         }
         0x20 => {
-            if (l & 0xffff) == 1 && (UI.over_btn || UI.over_tog) {
+            if (l & 0xffff) == 1 && (UI.over_btn || UI.over_tog || UI.over_seg >= 0) {
                 SetCursor(LoadCursorW(null_mut(), 32649usize as *const u16));
                 1
             } else {
@@ -1818,6 +2075,7 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             let py = ((l >> 16) & 0xffff) as i16 as f32 / UI.s;
             UI.over_btn = over(BTN, px, py);
             UI.over_tog = over(TOG, px, py);
+            UI.over_seg = seg_at(px, py);
             if UI.over_btn {
                 UI.press_item = 1;
                 UI.focus = 1;
@@ -1825,6 +2083,10 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             } else if UI.over_tog {
                 UI.press_item = 2;
                 UI.focus = 2;
+                SetCapture(h);
+            } else if UI.over_seg >= 0 {
+                UI.press_item = 3;
+                UI.focus = 3;
                 SetCapture(h);
             }
             kick(h);
@@ -1838,21 +2100,28 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
             let py = ((l >> 16) & 0xffff) as i16 as f32 / UI.s;
             UI.over_btn = over(BTN, px, py);
             UI.over_tog = over(TOG, px, py);
+            UI.over_seg = seg_at(px, py);
             if item == 1 && UI.over_btn {
                 receiver_toggle(h);
             } else if item == 2 && UI.over_tog {
                 theme_toggle(h);
+            } else if item == 3 && UI.over_seg >= 0 {
+                set_lang(h, LANGS[UI.over_seg as usize]);
             }
             kick(h);
             0
         }
         0x100 => {
             let repeat = (l >> 30) & 1 != 0;
-            if !repeat && (w == 0x20 || w == 0x0d) {
-                if UI.focus == 2 {
-                    theme_toggle(h);
-                } else {
-                    receiver_toggle(h);
+            if !repeat && UI.focus == 3 && (w == 0x25 || w == 0x27) {
+                let i = (LANG as i32 + if w == 0x25 { -1 } else { 1 }).clamp(0, 2);
+                set_lang(h, LANGS[i as usize]);
+                UI.kbd = true;
+            } else if !repeat && (w == 0x20 || w == 0x0d) {
+                match UI.focus {
+                    2 => theme_toggle(h),
+                    3 => {}
+                    _ => receiver_toggle(h),
                 }
                 UI.kbd = true;
             }
@@ -1912,9 +2181,9 @@ unsafe extern "system" fn wnd(h: H, m: u32, w: usize, l: isize) -> isize {
                     let mut pt = Point { x: 0, y: 0 };
                     GetCursorPos(&mut pt);
                     let menu = CreatePopupMenu();
-                    AppendMenuW(menu, 0, 101, wide("Открыть Aireluma").as_ptr());
+                    AppendMenuW(menu, 0, 101, wide(tr(Str::TrayOpen)).as_ptr());
                     AppendMenuW(menu, 0x800, 0, null());
-                    AppendMenuW(menu, 0, 102, wide("Выйти").as_ptr());
+                    AppendMenuW(menu, 0, 102, wide(tr(Str::TrayExit)).as_ptr());
                     SetForegroundWindow(h);
                     TrackPopupMenu(menu, 0x2, pt.x, pt.y, 0, h, null_mut());
                     DestroyMenu(menu);
@@ -1994,6 +2263,9 @@ pub fn run() {
         DARK = fs::read_to_string(appearance_path())
             .map(|v| v.trim() == "dark")
             .unwrap_or(false);
+        LANG = load_lang();
+        UI.lang_pos = LANG as i32 as f32;
+        UI.lang_t = UI.lang_pos;
         UI.dark = if DARK { 1.0 } else { 0.0 };
         UI.dark_t = UI.dark;
         init_gdip();
