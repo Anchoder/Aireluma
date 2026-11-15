@@ -1,5 +1,5 @@
 #define AppName "Aireluma"
-#define AppVersion "0.8.1"
+#define AppVersion "0.8.2"
 [Setup]
 AppId={{0C1E7E3A-75E5-4FA0-B6A1-30B0757E4111}
 AppName={#AppName}
