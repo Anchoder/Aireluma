@@ -20,7 +20,7 @@ Aireluma brings iPhone screen mirroring and audio to Windows and Linux through A
 | Screen and audio | Mirror your iPhone with sound on your PC |
 | Up to 4K / 60 FPS | Request HEVC and a high-quality stream from your device |
 | Light and dark | Smooth light-to-dark transitions; your choice is remembered |
-| Three languages | English, Deutsch and Русский, switched in the window (Windows) |
+| Three languages | English, Deutsch and Русский, switched in the window |
 | Local network | Reception works on your LAN; a wired PC is supported |
 | System tray on Windows | Keep receiving after closing the control window |
 | Native playback | Direct3D12 on Windows; GStreamer video playback on Linux |
@@ -34,6 +34,8 @@ Resolution, codec and frame rate are negotiated by the iPhone and depend on your
 <details><summary>See both themes side by side</summary><img src="docs/images/themes.png" alt="Light and dark interface previews" width="100%"></details>
 
 <details><summary>See the three languages</summary><img src="docs/images/languages.png" alt="The interface in English, German and Russian" width="100%"></details>
+
+<details><summary>See the Linux interface</summary><img src="docs/images/linux.png" alt="The Linux interface: waiting for an iPhone in English, a connected screen in German and an idle receiver in Russian" width="100%"></details>
 
 ## Install
 
@@ -54,7 +56,7 @@ Open Aireluma from your application menu. To uninstall: `sudo apt remove airelum
 3. Connect your iPhone and PC to the same local network. The PC can use Ethernet.
 4. On your iPhone, open **Control Center → Screen Mirroring → Aireluma**.
 
-On Windows the interface is available in English, German and Russian. Choose one with the switch at the bottom of the window; the first launch follows your Windows display language. The Linux interface is currently in Russian. On Windows, closing the window keeps Aireluma in the tray; use the tray menu to exit. On Linux, closing the window stops reception and exits.
+The interface is available in English, German and Russian. Choose one with the switch at the bottom of the window; the first launch follows your system language. On Windows, closing the window keeps Aireluma in the tray; use the tray menu to exit. On Linux, closing the window stops reception and exits.
 
 ## Before opening an issue
 
