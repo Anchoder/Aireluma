@@ -34,7 +34,9 @@ int main(int argc, char **argv) {
         g_assert_cmpint(video_renderer_choose_codec_and_size(codec == 2, codec == 1, &geometry), ==, 0);
         g_assert_cmpint(video_renderer_choose_codec_and_size(codec == 2, codec == 1, &geometry), ==, 0);
         video_renderer_pause();
-        gst_element_get_state(renderer->pipeline, NULL, NULL, GST_SECOND);
+        GstState paused_state;
+        gst_element_get_state(renderer->pipeline, &paused_state, NULL, GST_SECOND);
+        g_assert_cmpint(paused_state, ==, GST_STATE_PLAYING);
         video_renderer_resume();
         GstState state;
         gst_element_get_state(renderer->pipeline, &state, NULL, GST_SECOND);
@@ -58,6 +60,15 @@ int main(int argc, char **argv) {
             g_assert_null(error);
         }
     }
+    hls_video = true;
+    video_renderer_pause();
+    GstState state;
+    gst_element_get_state(renderer->pipeline, &state, NULL, GST_SECOND);
+    g_assert_cmpint(state, ==, GST_STATE_PAUSED);
+    video_renderer_resume();
+    gst_element_get_state(renderer->pipeline, &state, NULL, GST_SECOND);
+    g_assert_cmpint(state, ==, GST_STATE_PLAYING);
+    hls_video = false;
     video_renderer_stop();
     video_renderer_destroy();
     logger_destroy(logger);

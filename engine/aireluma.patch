@@ -228,9 +228,27 @@ index 648ee01..90a39b3 100644
                      short sps_size = byteutils_get_short_be(payload,6);
                      unsigned char *sequence_parameter_set = payload + 8;
 diff --git a/renderers/video_renderer.c b/renderers/video_renderer.c
-index b6c1f1c..f9a0c44 100644
+index b6c1f1c..97fc75a 100644
 --- a/renderers/video_renderer.c
 +++ b/renderers/video_renderer.c
+@@ -500,7 +500,7 @@ void video_renderer_init(logger_t *render_logger, const char *server_name, video
+ }
+ 
+ void video_renderer_pause() {
+-    if (!renderer) {
++    if (!renderer || !hls_video) {
+         return;
+     }
+     GstStateChangeReturn ret = gst_element_set_state(renderer->pipeline, GST_STATE_PAUSED);
+@@ -508,7 +508,7 @@ void video_renderer_pause() {
+ }
+ 
+ void video_renderer_resume() {
+-    if (!renderer) {
++    if (!renderer || !hls_video) {
+         return;
+     }
+     gst_element_set_state (renderer->pipeline, GST_STATE_PLAYING);
 @@ -1095,9 +1095,13 @@ int video_renderer_choose_codec_and_size (bool video_is_jpeg, bool video_is_h265
      } else if (renderer_used == renderer) {
          return 0;
