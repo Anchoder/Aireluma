@@ -1,25 +1,4 @@
-.aireluma { background-color: #f7f7fa; color: #242933; padding: 24px; font-family: sans-serif; font-size: 14px; transition: background-color 240ms ease-in-out, color 240ms ease-in-out; }
-.aireluma.dark { background-color: #101014; color: #f3f3f6; }
-.aireluma .title { font-size: 27px; font-weight: 600; }
-.aireluma .subtitle { font-size: 13px; color: #666b75; transition: color 240ms ease-in-out; }
-.aireluma.dark .subtitle { color: #9f9da7; }
-.aireluma .card { padding: 16px; border: 1px solid #dddde6; border-radius: 10px; background-color: #ffffff; transition: background-color 240ms ease-in-out, border-color 240ms ease-in-out; }
-.aireluma.dark .card { border-color: #2b2b31; background-color: #18181e; }
-.aireluma entry { padding: 0 12px; border: 1px solid #d4d4df; border-radius: 6px; background: #f7f7fa; color: #242933; box-shadow: none; transition: background-color 240ms ease-in-out, color 240ms ease-in-out; }
-.aireluma.dark entry { background: #101016; border-color: #34343b; color: #f3f3f6; }
-.aireluma entry:focus { border-color: #7764ed; }
-.aireluma button { border: none; box-shadow: none; border-radius: 6px; transition: background-color 160ms ease-in-out, color 240ms ease-in-out; }
-.aireluma .primary { background: #6753dd; color: white; font-weight: 600; }
-.aireluma .primary:hover { background: #7865e7; }
-.aireluma .primary:active { background: #5944c9; }
-.aireluma.dark .primary { background: #7764ed; }
-.aireluma .secondary { padding: 6px 10px; background: #e6e8ef; color: #5c606a; font-size: 12px; }
-.aireluma.dark .secondary { background: #282833; color: #c2c1c9; }
-.aireluma .section-title { font-size: 16px; font-weight: 600; }
-.aireluma .field-label, .aireluma .footer-label { font-size: 13px; }
-.aireluma .status { font-size: 14px; color: #666b75; }
-.aireluma.dark .status { color: #c2c1c9; }
-.aireluma .step { border-radius: 5px; background: #eaecf9; color: #6753dd; font-size: 13px; transition: background-color 240ms ease-in-out, color 240ms ease-in-out; }
-.aireluma.dark .step { background: #20202b; color: #c4c8ed; }
-.aireluma .footer { border-top: 1px solid #dddde6; padding-top: 16px; color: #5c606a; transition: border-color 240ms ease-in-out, color 240ms ease-in-out; }
-.aireluma.dark .footer { border-color: #2b2b31; color: #c2c1c9; }
+entry.aireluma-entry, entry.aireluma-entry > text { background: none; background-color: transparent; border: none; box-shadow: none; outline: none; padding: 0; min-height: 0; font-size: 15px; color: #1d1d1f; caret-color: #5b4bdd; }
+entry.aireluma-entry.dark, entry.aireluma-entry.dark > text { color: #f5f5f7; caret-color: #a79dff; }
+entry.aireluma-entry:disabled { opacity: 0.55; }
+entry.aireluma-entry selection { background-color: rgba(91, 75, 221, 0.28); color: inherit; }
