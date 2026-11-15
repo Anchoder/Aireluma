@@ -16,6 +16,9 @@ SetupIconFile=assets\aireluma.ico
 WizardImageFile=assets\wizard.bmp
 WizardSmallImageFile=assets\wizard-small.bmp
 UninstallDisplayIcon={app}\airplay-windows.exe
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\runtime"
+Type: filesandordirs; Name: "{app}\licenses"
 [Files]
 Source: "package\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]

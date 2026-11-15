@@ -49,6 +49,14 @@ try {
         Copy-Item -LiteralPath $source -Destination (Join-Path $runtime $entry) -Force
     }
 
+    $runtimePath = [IO.Path]::GetFullPath($runtime).TrimEnd('\') + '\'
+    $allowedFiles = @('uxplay.exe') + @(Get-Content 'engine/runtime-files.txt' | ForEach-Object { $_.Replace('/', '\') })
+    foreach ($file in Get-ChildItem -LiteralPath $runtime -File -Recurse) {
+        if (-not $file.FullName.StartsWith($runtimePath, [StringComparison]::OrdinalIgnoreCase)) { throw 'Runtime file is outside the package.' }
+        $relativePath = $file.FullName.Substring($runtimePath.Length)
+        if ($relativePath -notin $allowedFiles) { Remove-Item -LiteralPath $file.FullName -Force }
+    }
+
     foreach ($package in (Get-Content 'engine/runtime-packages.json' -Raw | ConvertFrom-Json)) {
         $name = $package.package -replace '^mingw-w64-ucrt-x86_64-', ''
         $source = Join-Path $ucrt "share/licenses/$name"
