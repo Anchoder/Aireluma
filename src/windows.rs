@@ -1,4 +1,4 @@
-#![allow(static_mut_refs, dead_code)]
+#![allow(static_mut_refs)]
 use std::{
     env,
     ffi::OsStr,
@@ -83,6 +83,20 @@ struct Paint {
     restore: i32,
     inc_update: i32,
     reserved: [u8; 32],
+}
+#[repr(C)]
+struct BmiHeader {
+    size: u32,
+    width: i32,
+    height: i32,
+    planes: u16,
+    bpp: u16,
+    compression: u32,
+    size_image: u32,
+    xppm: i32,
+    yppm: i32,
+    used: u32,
+    important: u32,
 }
 #[repr(C)]
 struct TrackMouse {
@@ -212,9 +226,15 @@ extern "system" {
 #[link(name = "gdi32")]
 extern "system" {
     fn CreateCompatibleDC(dc: H) -> H;
-    fn CreateCompatibleBitmap(dc: H, w: i32, h: i32) -> H;
+    fn CreateDIBSection(
+        dc: H,
+        bmi: *const BmiHeader,
+        usage: u32,
+        bits: *mut *mut core::ffi::c_void,
+        section: H,
+        offset: u32,
+    ) -> H;
     fn BitBlt(dst: H, x: i32, y: i32, w: i32, h: i32, src: H, sx: i32, sy: i32, rop: u32) -> i32;
-    fn DeleteDC(dc: H) -> i32;
     fn CreateSolidBrush(color: u32) -> H;
     fn SelectObject(dc: H, obj: H) -> H;
     fn DeleteObject(obj: H) -> i32;
@@ -246,13 +266,13 @@ extern "system" {
     fn GdipSetTextRenderingHint(g: H, m: i32) -> i32;
     fn GdipSetInterpolationMode(g: H, m: i32) -> i32;
     fn GdipSetPixelOffsetMode(g: H, m: i32) -> i32;
-    fn GdipGraphicsClear(g: H, color: u32) -> i32;
+    fn GdipSetClipRect(g: H, x: f32, y: f32, w: f32, h: f32, mode: i32) -> i32;
+    fn GdipFillRectangle(g: H, brush: H, x: f32, y: f32, w: f32, h: f32) -> i32;
     fn GdipSaveGraphics(g: H, state: *mut u32) -> i32;
     fn GdipRestoreGraphics(g: H, state: u32) -> i32;
     fn GdipScaleWorldTransform(g: H, x: f32, y: f32, order: i32) -> i32;
     fn GdipTranslateWorldTransform(g: H, x: f32, y: f32, order: i32) -> i32;
     fn GdipSetClipPath(g: H, path: H, mode: i32) -> i32;
-    fn GdipResetClip(g: H) -> i32;
     fn GdipCreateSolidFill(color: u32, brush: *mut H) -> i32;
     fn GdipDeleteBrush(brush: H) -> i32;
     fn GdipCreateLineBrush(
@@ -307,6 +327,14 @@ extern "system" {
         lines: *mut i32,
     ) -> i32;
     fn GdipCreateBitmapFromHICON(icon: H, bmp: *mut H) -> i32;
+    fn GdipCreateBitmapFromScan0(
+        w: i32,
+        h: i32,
+        stride: i32,
+        fmt: i32,
+        scan0: *mut u8,
+        bmp: *mut H,
+    ) -> i32;
     fn GdipCreateImageAttributes(a: *mut H) -> i32;
     fn GdipDisposeImageAttributes(a: H) -> i32;
     fn GdipSetImageAttributesColorMatrix(
@@ -384,6 +412,8 @@ struct Ui {
     phase: f64,
     last: u64,
     timer: bool,
+    interval: u32,
+    partial: bool,
     status: Status,
     prev_status: Status,
     status_fade: f32,
@@ -414,6 +444,8 @@ static mut UI: Ui = Ui {
     phase: 0.0,
     last: 0,
     timer: false,
+    interval: 16,
+    partial: false,
     status: Status::Off,
     prev_status: Status::Off,
     status_fade: 1.0,
@@ -432,9 +464,12 @@ const WIN_W: f32 = 380.0;
 const WIN_H: f32 = 620.0;
 const BTN: (f32, f32, f32, f32) = (20.0, 404.0, 340.0, 52.0);
 const TOG: (f32, f32, f32, f32) = (300.0, 33.0, 56.0, 32.0);
+// Region around the status indicator that changes while the receiver is running.
+const AMBIENT: (f32, f32, f32, f32) = (114.0, 92.0, 152.0, 144.0);
 const FIELD: (f32, f32, f32, f32) = (20.0, 340.0, 340.0, 48.0);
 
 static mut DARK: bool = false;
+static mut PARTIAL: bool = false;
 static mut GENERATION: usize = 0;
 static mut RECEIVER_READY: bool = false;
 static mut VIDEO_WINDOW: H = null_mut();
@@ -462,12 +497,10 @@ static mut FMT_C: H = null_mut();
 static mut FMT_R: H = null_mut();
 static mut FMT_W: H = null_mut();
 static mut IMG_HEAD: H = null_mut();
+static mut IMG_GLOW: H = null_mut();
 
 fn wide(s: &str) -> Vec<u16> {
     OsStr::new(s).encode_wide().chain(Some(0)).collect()
-}
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    a + (b - a) * t
 }
 fn mix(a: u32, b: u32, t: f32) -> u32 {
     let t = t.clamp(0.0, 1.0);
@@ -607,14 +640,22 @@ unsafe fn measure(g: H, s: &str, font: H) -> f32 {
     o.w
 }
 unsafe fn image(g: H, im: H, x: f32, y: f32, w: f32, h: f32, size: f32, a: f32) {
+    image_tint(g, im, x, y, w, h, size, a, 0xFFFFFF);
+}
+unsafe fn image_tint(g: H, im: H, x: f32, y: f32, w: f32, h: f32, size: f32, a: f32, rgb: u32) {
     if im.is_null() || a <= 0.003 {
         return;
     }
     let mut at = null_mut();
     GdipCreateImageAttributes(&mut at);
+    let (r, gr, b) = (
+        ((rgb >> 16) & 255) as f32 / 255.0,
+        ((rgb >> 8) & 255) as f32 / 255.0,
+        (rgb & 255) as f32 / 255.0,
+    );
     let m: [f32; 25] = [
-        1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        a, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        r, 0.0, 0.0, 0.0, 0.0, 0.0, gr, 0.0, 0.0, 0.0, 0.0, 0.0, b, 0.0, 0.0, 0.0, 0.0, 0.0, a,
+        0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
     ];
     GdipSetImageAttributesColorMatrix(at, 0, 1, m.as_ptr(), null(), 0);
     GdipDrawImageRectRect(
@@ -682,6 +723,26 @@ unsafe fn init_gdip() {
         bmp
     };
     IMG_HEAD = load(1, 96);
+    // Radial falloff mask for the ambient glow, tinted at draw time.
+    let n = 240usize;
+    let mut px = vec![0u32; n * n];
+    for y in 0..n {
+        for x in 0..n {
+            let (dx, dy) = (x as f32 + 0.5 - 120.0, y as f32 + 0.5 - 120.0);
+            let a =
+                ((1.0 - (dx * dx + dy * dy).sqrt() / 120.0).clamp(0.0, 1.0) * 255.0).round() as u32;
+            px[y * n + x] = (a << 24) | (a << 16) | (a << 8) | a;
+        }
+    }
+    let scan0 = Box::leak(px.into_boxed_slice()).as_mut_ptr() as *mut u8;
+    GdipCreateBitmapFromScan0(
+        n as i32,
+        n as i32,
+        (n * 4) as i32,
+        0x000E200B,
+        scan0,
+        &mut IMG_GLOW,
+    );
 }
 
 // ───────────────────────────── Status text ─────────────────────────────
@@ -868,17 +929,19 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
 }
 unsafe fn draw_hero(g: H, a: f32) {
     let (x, y, w, h) = (20.0, 92.0, 340.0, 212.0);
-    shadow(
-        g,
-        x,
-        y,
-        w,
-        h,
-        24.0,
-        0x2B2B4A,
-        a * (1.0 - UI.dark) * 0.5,
-        6.0,
-    );
+    if !PARTIAL {
+        shadow(
+            g,
+            x,
+            y,
+            w,
+            h,
+            24.0,
+            0x2B2B4A,
+            a * (1.0 - UI.dark) * 0.5,
+            6.0,
+        );
+    }
     fill_rr(g, x, y, w, h, 24.0, argb(pc(CARD), a));
     stroke_rr(
         g,
@@ -891,7 +954,9 @@ unsafe fn draw_hero(g: H, a: f32) {
         1.0,
     );
     let clip = rr_path(x, y, w, h, 24.0);
-    GdipSetClipPath(g, clip, 0);
+    let mut saved = 0;
+    GdipSaveGraphics(g, &mut saved);
+    GdipSetClipPath(g, clip, 1);
     let (cx, cy, r) = (190.0f32, 158.0f32, 32.0f32);
     let act = UI.a_start.max(UI.a_wait);
     let mut col = mix(pc(TER), pc(ACC_TXT), act);
@@ -899,9 +964,20 @@ unsafe fn draw_hero(g: H, a: f32) {
     col = mix(col, pc(RED), UI.a_fail);
     // ambient glow
     let glow = act * 0.6 + UI.a_conn * 0.8 + UI.a_fail * 0.5;
-    for i in 0..16 {
-        let rr = 120.0 - i as f32 * 6.0;
-        fill_circle(g, cx, cy, rr, argb(col, a * glow * 0.016));
+    if glow > 0.01 {
+        GdipSetInterpolationMode(g, 3);
+        image_tint(
+            g,
+            IMG_GLOW,
+            cx - 120.0,
+            cy - 120.0,
+            240.0,
+            240.0,
+            240.0,
+            a * glow * 0.26,
+            col,
+        );
+        GdipSetInterpolationMode(g, 7);
     }
     // ripples while waiting / connected
     let ph = UI.phase as f32;
@@ -945,7 +1021,7 @@ unsafe fn draw_hero(g: H, a: f32) {
     stroke_circle(g, cx, cy, r - 1.0, argb(col, 0.55 * a), 1.6);
     let k = 1.0 + 0.035 * ((ph * 2.2).sin()) * UI.a_conn;
     glyph(g, cx, cy, k, argb(col, a));
-    GdipResetClip(g);
+    GdipRestoreGraphics(g, saved);
     GdipDeletePath(clip);
     // status text with cross-fade
     let f = ease_out(UI.status_fade);
@@ -1182,42 +1258,55 @@ unsafe fn draw_footer(g: H, a: f32) {
         x += 22.0 + widths[i] + gap;
     }
 }
-unsafe fn render(g: H) {
+unsafe fn render(g: H, clip: Option<(f32, f32, f32, f32)>) {
     GdipSetSmoothingMode(g, 4);
     GdipSetTextRenderingHint(g, 4);
     GdipSetInterpolationMode(g, 7);
     GdipSetPixelOffsetMode(g, 2);
-    GdipGraphicsClear(g, argb(pc(BG), 1.0));
+    PARTIAL = clip.is_some();
+    if let Some(c) = clip {
+        let s = UI.s;
+        GdipSetClipRect(g, c.0 * s, c.1 * s, c.2 * s, c.3 * s, 0);
+    }
+    let mut bg = null_mut();
+    GdipCreateSolidFill(argb(pc(BG), 1.0), &mut bg);
+    GdipFillRectangle(g, bg, 0.0, 0.0, BB_W as f32, BB_H as f32);
+    GdipDeleteBrush(bg);
     GdipScaleWorldTransform(g, UI.s, UI.s, 0);
-    let (a, st) = sec(g, 0);
-    image(g, IMG_HEAD, 24.0, 24.0, 48.0, 48.0, 96.0, a);
-    text(
-        g,
-        "Aireluma",
-        84.0,
-        22.0,
-        200.0,
-        30.0,
-        F_TITLE,
-        argb(pc(TEXT), a),
-        FMT_L,
-    );
-    text(
-        g,
-        "Повтор экрана с iOS",
-        85.0,
-        52.0,
-        200.0,
-        18.0,
-        F_BODY,
-        argb(pc(SEC), a),
-        FMT_L,
-    );
-    draw_toggle(g, a);
-    GdipRestoreGraphics(g, st);
+    if clip.is_none() {
+        let (a, st) = sec(g, 0);
+        image(g, IMG_HEAD, 24.0, 24.0, 48.0, 48.0, 96.0, a);
+        text(
+            g,
+            "Aireluma",
+            84.0,
+            22.0,
+            200.0,
+            30.0,
+            F_TITLE,
+            argb(pc(TEXT), a),
+            FMT_L,
+        );
+        text(
+            g,
+            "Повтор экрана с iOS",
+            85.0,
+            52.0,
+            200.0,
+            18.0,
+            F_BODY,
+            argb(pc(SEC), a),
+            FMT_L,
+        );
+        draw_toggle(g, a);
+        GdipRestoreGraphics(g, st);
+    }
     let (a, st) = sec(g, 1);
     draw_hero(g, a);
     GdipRestoreGraphics(g, st);
+    if clip.is_some() {
+        return;
+    }
     let (a, st) = sec(g, 2);
     draw_field(g, a);
     GdipRestoreGraphics(g, st);
@@ -1242,6 +1331,7 @@ unsafe fn paint(h: H) {
     };
     GetClientRect(h, &mut rc);
     let (w, hh) = (rc.right.max(1), rc.bottom.max(1));
+    let mut fresh = false;
     if BB_DC.is_null() || BB_W != w || BB_H != hh {
         if !BB_BMP.is_null() {
             DeleteObject(BB_BMP);
@@ -1249,16 +1339,50 @@ unsafe fn paint(h: H) {
         if BB_DC.is_null() {
             BB_DC = CreateCompatibleDC(dc);
         }
-        BB_BMP = CreateCompatibleBitmap(dc, w, hh);
+        let bmi = BmiHeader {
+            size: std::mem::size_of::<BmiHeader>() as u32,
+            width: w,
+            height: -hh,
+            planes: 1,
+            bpp: 32,
+            compression: 0,
+            size_image: 0,
+            xppm: 0,
+            yppm: 0,
+            used: 0,
+            important: 0,
+        };
+        let mut bits = null_mut();
+        BB_BMP = CreateDIBSection(dc, &bmi, 0, &mut bits, null_mut(), 0);
         SelectObject(BB_DC, BB_BMP);
         BB_W = w;
         BB_H = hh;
+        fresh = true;
     }
+    // Only the indicator region is redrawn while nothing else is animating.
+    let r = ps.rect;
+    let (a, s) = (AMBIENT, UI.s);
+    let partial = UI.partial
+        && !fresh
+        && r.left >= (a.0 * s).floor() as i32
+        && r.top >= (a.1 * s).floor() as i32
+        && r.right <= ((a.0 + a.2) * s).ceil() as i32
+        && r.bottom <= ((a.1 + a.3) * s).ceil() as i32;
     let mut g = null_mut();
     GdipCreateFromHDC(BB_DC, &mut g);
-    render(g);
+    render(g, if partial { Some(AMBIENT) } else { None });
     GdipDeleteGraphics(g);
-    BitBlt(dc, 0, 0, w, hh, BB_DC, 0, 0, 0x00CC0020);
+    BitBlt(
+        dc,
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top,
+        BB_DC,
+        r.left,
+        r.top,
+        0x00CC0020,
+    );
     EndPaint(h, &ps);
 }
 
@@ -1267,6 +1391,7 @@ unsafe fn kick(h: H) {
     if !UI.timer {
         UI.timer = true;
         UI.last = GetTickCount64();
+        UI.interval = 16;
         SetTimer(h, 2, 16, null_mut());
     }
 }
@@ -1324,13 +1449,32 @@ unsafe fn tick(h: H) {
         InvalidateRect(INPUT, null(), 1);
     }
     let visible = IsWindowVisible(h) != 0 && IsIconic(h) == 0;
+    UI.partial = visible && !moving && continuous;
     if visible {
-        InvalidateRect(h, null(), 0);
+        if UI.partial {
+            let (a, s) = (AMBIENT, UI.s);
+            let dirty = Rect {
+                left: (a.0 * s).floor() as i32,
+                top: (a.1 * s).floor() as i32,
+                right: ((a.0 + a.2) * s).ceil() as i32,
+                bottom: ((a.1 + a.3) * s).ceil() as i32,
+            };
+            InvalidateRect(h, &dirty, 0);
+        } else {
+            InvalidateRect(h, null(), 0);
+        }
         UpdateWindow(h);
     }
     if !visible || !(moving || continuous) {
         KillTimer(h, 2);
         UI.timer = false;
+    } else {
+        // Ambient animation only needs half the frame rate.
+        let want = if UI.partial { 33 } else { 16 };
+        if UI.interval != want {
+            UI.interval = want;
+            SetTimer(h, 2, want, null_mut());
+        }
     }
 }
 static mut EDIT_HAS_FOCUS: bool = false;
