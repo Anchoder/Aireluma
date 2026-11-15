@@ -8,7 +8,7 @@
     <a href="https://github.com/Anchoder/Aireluma/actions/workflows/linux.yml"><img alt="Linux package build" src="https://github.com/Anchoder/Aireluma/actions/workflows/linux.yml/badge.svg"></a>
     <a href="LICENSE"><img alt="GPL-3.0-or-later license" src="https://img.shields.io/badge/License-GPL--3.0--or--later-676777?style=flat-square"></a>
   </p>
-  <p><a href="https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma-Setup.exe"><strong>Windows installer</strong></a> · <a href="https://github.com/Anchoder/Aireluma/releases/download/v0.8.3/Aireluma_0.8.3_amd64.deb"><strong>Linux .deb</strong></a> · <a href="docs/README.ru.md">Русский</a> · <a href="https://github.com/Anchoder/Aireluma/issues">Report an issue</a></p>
+  <p><a href="https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma-Setup.exe"><strong>Windows installer</strong></a> · <a href="https://github.com/Anchoder/Aireluma/releases/download/v0.8.6/Aireluma_0.8.6_amd64.deb"><strong>Linux .deb</strong></a> · <a href="docs/README.ru.md">Русский</a> · <a href="https://github.com/Anchoder/Aireluma/issues">Report an issue</a></p>
 </div>
 
 ## A small receiver for your desktop
@@ -41,10 +41,10 @@ Resolution, codec and frame rate are negotiated by the iPhone and depend on your
 
 **Windows 10/11 x64:** download [Aireluma-Setup.exe](https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma-Setup.exe) and run the installer. Direct3D12 is required.
 
-**Ubuntu 24.04 x64:** download [the Debian package](https://github.com/Anchoder/Aireluma/releases/download/v0.8.3/Aireluma_0.8.3_amd64.deb), then install it with its dependencies:
+**Ubuntu 24.04 x64:** download [the Debian package](https://github.com/Anchoder/Aireluma/releases/download/v0.8.6/Aireluma_0.8.6_amd64.deb), then install it with its dependencies:
 
 ```sh
-sudo apt install ./Aireluma_0.8.3_amd64.deb
+sudo apt install ./Aireluma_0.8.6_amd64.deb
 ```
 
 Open Aireluma from your application menu. To uninstall: `sudo apt remove aireluma`. Other Linux distributions can use the [source build instructions](docs/BUILDING.md). The prebuilt Linux package is built and checked on Ubuntu 24.04.

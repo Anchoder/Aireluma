@@ -1,7 +1,7 @@
 <div align="center">
   <picture><source media="(prefers-reduced-motion: reduce)" srcset="images/banner-readable.png"><img src="images/banner-readable.gif" alt="Aireluma — экран iPhone на Windows и Linux" width="100%"></picture>
   <p><strong>Экран и звук iPhone на компьютере. Без проводов.</strong></p>
-  <p><a href="https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma-Setup.exe">Windows</a> · <a href="https://github.com/Anchoder/Aireluma/releases/download/v0.8.3/Aireluma_0.8.3_amd64.deb">Linux .deb</a> · <a href="../README.md">English</a> · <a href="https://github.com/Anchoder/Aireluma/issues">Сообщить о проблеме</a></p>
+  <p><a href="https://github.com/Anchoder/Aireluma/releases/latest/download/Aireluma-Setup.exe">Windows</a> · <a href="https://github.com/Anchoder/Aireluma/releases/download/v0.8.6/Aireluma_0.8.6_amd64.deb">Linux .deb</a> · <a href="../README.md">English</a> · <a href="https://github.com/Anchoder/Aireluma/issues">Сообщить о проблеме</a></p>
 </div>
 
 ## Возможности
@@ -29,7 +29,7 @@
 Готовый пакет рассчитан на **Ubuntu 24.04 x64**. Скачайте `.deb` из [релиза](https://github.com/Anchoder/Aireluma/releases/latest) и установите:
 
 ```sh
-sudo apt install ./Aireluma_0.8.3_amd64.deb
+sudo apt install ./Aireluma_0.8.6_amd64.deb
 ```
 
 Приложение появится в меню программ. Удаление: `sudo apt remove aireluma`. Сборка для других дистрибутивов описана в [BUILDING.md](BUILDING.md). На Linux закрытие окна останавливает приёмник и завершает приложение.
