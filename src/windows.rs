@@ -463,7 +463,7 @@ static mut UI: Ui = Ui {
 const WIN_W: f32 = 380.0;
 const WIN_H: f32 = 620.0;
 const BTN: (f32, f32, f32, f32) = (20.0, 404.0, 340.0, 52.0);
-const TOG: (f32, f32, f32, f32) = (300.0, 33.0, 56.0, 32.0);
+const TOG: (f32, f32, f32, f32) = (304.0, 33.0, 56.0, 32.0);
 // Region around the status indicator that changes while the receiver is running.
 const AMBIENT: (f32, f32, f32, f32) = (114.0, 92.0, 152.0, 144.0);
 const FIELD: (f32, f32, f32, f32) = (20.0, 340.0, 340.0, 48.0);
@@ -852,7 +852,11 @@ unsafe fn glyph(g: H, cx: f32, cy: f32, k: f32, color: u32) {
 unsafe fn draw_toggle(g: H, a: f32) {
     let (x, y, w, h) = TOG;
     let t = UI.dark;
-    let off = mix(pc(NEUTRAL), 0xFFFFFF, UI.hover_tog * 0.35);
+    let off = mix(
+        mix(pc(NEUTRAL), pc(TER), 0.22),
+        0xFFFFFF,
+        UI.hover_tog * 0.25,
+    );
     let on = mix(pc(ACC_B), 0xFFFFFF, UI.hover_tog * 0.12);
     fill_rr(g, x, y, w, h, h / 2.0, argb(mix(off, on, t), a));
     let kx = x + 16.0 + t * (w - 32.0);
@@ -908,7 +912,7 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
         g,
         &title,
         20.0,
-        214.0 + dy,
+        209.0 + dy,
         340.0,
         28.0,
         F_HERO,
@@ -919,7 +923,7 @@ unsafe fn draw_status_block(g: H, s: Status, a: f32, dy: f32) {
         g,
         &hint,
         48.0,
-        244.0 + dy,
+        239.0 + dy,
         284.0,
         40.0,
         F_BODY,
@@ -985,7 +989,7 @@ unsafe fn draw_hero(g: H, a: f32) {
     let mut saved = 0;
     GdipSaveGraphics(g, &mut saved);
     GdipSetClipPath(g, clip, 1);
-    let (cx, cy, r) = (190.0f32, 158.0f32, 32.0f32);
+    let (cx, cy, r) = (190.0f32, 153.0f32, 32.0f32);
     let act = UI.a_start.max(UI.a_wait);
     let mut col = mix(pc(TER), pc(ACC_TXT), act);
     col = mix(col, pc(GREEN), UI.a_conn);
@@ -1196,7 +1200,7 @@ unsafe fn draw_steps(g: H, a: f32) {
             g,
             n,
             24.0,
-            y + 3.5,
+            y + 4.5,
             22.0,
             18.0,
             F_BADGE,
@@ -1291,11 +1295,11 @@ unsafe fn render(g: H, clip: Option<(f32, f32, f32, f32)>) {
     GdipScaleWorldTransform(g, UI.s, UI.s, 0);
     if clip.is_none() {
         let (a, st) = sec(g, 0);
-        image(g, IMG_HEAD, 24.0, 24.0, 48.0, 48.0, 96.0, a);
+        image(g, IMG_HEAD, 20.0, 24.0, 48.0, 48.0, 96.0, a);
         text(
             g,
             "Aireluma",
-            84.0,
+            80.0,
             22.0,
             200.0,
             30.0,
@@ -1306,7 +1310,7 @@ unsafe fn render(g: H, clip: Option<(f32, f32, f32, f32)>) {
         text(
             g,
             "Повтор экрана с iOS",
-            85.0,
+            81.0,
             52.0,
             200.0,
             18.0,
